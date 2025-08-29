@@ -1,0 +1,62 @@
+[project]
+name = "music-agent"
+version = "0.1.0"
+description = "AI-powered music agent for multi-platform music discovery and management"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "strands-agents==1.6.0",
+    "strands-agents-tools>=0.2.5",
+    "boto3>=1.40.20",
+    "requests>=2.32.5",
+    "pydantic>=2.11.7",
+    "python-dotenv>=1.1.1",
+    "yt-dlp>=2025.8.27",
+    "mutagen>=1.47.0",
+    "pycryptodomex>=3.23.0",
+    "browser-cookie3>=0.20.1",
+    "httpx>=0.28.1",
+    "beautifulsoup4>=4.13.5",
+    "lxml>=6.0.1",
+    "aiohttp>=3.12.15",
+    "aiosqlite>=0.21.0",
+    "sqlalchemy>=2.0.43",
+    "alembic>=1.16.5",
+    "pyotp>=2.9.0",
+    "rich>=14.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.4.1",
+    "pytest-asyncio>=1.1.0",
+    "pytest-mock>=3.14.1",
+    "black>=25.1.0",
+    "ruff>=0.12.11",
+    "mypy>=1.17.1",
+    "ipython>=9.4.0",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

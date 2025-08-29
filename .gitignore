@@ -1,0 +1,324 @@
+# ====================================
+# Python / Music Agent Specific
+# ====================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ====================================
+# Authentication & Credentials
+# ====================================
+
+# Environment files with secrets
+.env*
+!.env.example
+*.env
+.envrc
+
+# API keys and tokens
+api_keys.txt
+secrets.json
+credentials.json
+auth_tokens.txt
+
+# Music service authentication
+deezer_arl.txt
+spotify_credentials.json
+youtube_cookies.txt
+*.cookies
+*.cookie
+
+# AWS credentials
+aws_credentials
+.aws/
+aws-exports.js
+
+# ====================================
+# Music Files & Cache
+# ====================================
+
+# Downloaded music files
+*.mp3
+*.flac
+*.wav
+*.m4a
+*.aac
+*.ogg
+*.wma
+music/
+downloads/
+audio_cache/
+tracks/
+
+# Thumbnails and album art
+thumbnails/
+covers/
+artwork/
+*.jpg
+*.jpeg
+*.png
+*.webp
+!src/assets/*.png
+!src/assets/*.jpg
+
+# Audio processing temp files
+*.tmp.mp3
+*.temp.wav
+temp_audio/
+processing/
+
+# ====================================
+# Database & Data
+# ====================================
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+database/
+db_backups/
+
+# Database migrations
+migrations/versions/
+alembic.ini
+
+# Data exports
+exports/
+*.csv
+*.json.bak
+playlist_exports/
+
+# Logs and temp data
+*.log
+logs/
+temp_data/
+cache/
+.cache/
+
+# ====================================
+# Development Tools
+# ====================================
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints
+
+# ====================================
+# AWS & Infrastructure
+# ====================================
+
+# CDK outputs
+cdk.out/
+cdk.context.json
+*.assets.json
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# CloudFormation
+template.yaml
+packaged-template.yaml
+
+# ====================================
+# Node.js / Frontend (if added)
+# ====================================
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ====================================
+# Docker & Containers
+# ====================================
+
+# Docker
+Dockerfile.local
+docker-compose.override.yml
+.dockerignore
+
+# Container data
+volumes/
+docker_data/
+
+# ====================================
+# Music Agent Specific
+# ====================================
+
+# Agent state and memory
+agent_state/
+memory/
+conversation_history/
+user_profiles/
+
+# Model cache
+model_cache/
+embeddings_cache/
+.langchain/
+.chroma/
+
+# Music analysis cache
+audio_features/
+analysis_cache/
+spectrograms/
+
+# Search indices
+search_index/
+vector_db/
+chromadb/
+
+# Playlist backups
+playlist_backups/
+*.m3u.bak
+*.pls.bak
+
+# ====================================
+# Testing & Development
+# ====================================
+
+# Test outputs
+test_outputs/
+test_downloads/
+test_audio/
+coverage_html/
+
+# Performance profiling
+*.prof
+profiling/
+
+# Debug files
+debug/
+debug_*.log
+*.debug
+
+# ====================================
+# Documentation Generated Files
+# ====================================
+
+# Generated docs
+docs/_build/
+docs/build/
+site/
+
+# ====================================
+# Backup & Temporary Files
+# ====================================
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+*.orig
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Archive files (unless specifically needed)
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# ====================================
+# Configuration Overrides
+# ====================================
+
+# Local configuration overrides
+config.local.json
+settings.local.py
+local_settings.py
+
+# User-specific configs
+user_config.json
+personal_settings.json
+
+# Development overrides
+dev_config.py
+test_config.py

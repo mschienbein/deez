@@ -1,0 +1,96 @@
+agent:
+  name: music-discovery-agent
+  description: "AI agent for multi-platform music discovery and management"
+  model_provider: openai
+  model_name: gpt-5
+  region: us-east-1
+  
+  tools:
+    - http_request
+    - python_repl
+    - shell
+    - file_read
+    - file_write
+    - calculator
+    - current_time
+    - use_aws
+  
+  environment:
+    # Music Service Credentials
+    DEEZER_ARL: ${DEEZER_ARL_SECRET}
+    SPOTIFY_USERNAME: ${SPOTIFY_USERNAME_SECRET}
+    SPOTIFY_PASSWORD: ${SPOTIFY_PASSWORD_SECRET}
+    SPOTIFY_TOTP_SECRET: ${SPOTIFY_TOTP_SECRET}
+    
+    # Model Provider Settings
+    OPENAI_API_KEY: ${OPENAI_API_KEY_SECRET}
+    OPENAI_MODEL: gpt-5
+    PRIMARY_MODEL_PROVIDER: openai
+    FALLBACK_MODEL_PROVIDER: bedrock
+    
+    # Agent Configuration
+    DATABASE_URL: ${DATABASE_URL}
+    AGENT_LOG_LEVEL: INFO
+    CACHE_DIR: /tmp/music_agent_cache
+    
+  memory:
+    enabled: true
+    provider: agent_core_memory
+    
+  observability:
+    langfuse:
+      enabled: true
+      host: ${LANGFUSE_HOST}
+      public_key: ${LANGFUSE_PUBLIC_KEY}
+      secret_key: ${LANGFUSE_SECRET_KEY}
+      
+  security:
+    secrets_manager:
+      # Music Service Credentials
+      - name: DEEZER_ARL_SECRET
+        description: "Deezer ARL cookie for authentication"
+      - name: SPOTIFY_USERNAME_SECRET
+        description: "Spotify username"
+      - name: SPOTIFY_PASSWORD_SECRET
+        description: "Spotify password"
+      - name: SPOTIFY_TOTP_SECRET
+        description: "Spotify TOTP secret for 2FA"
+        
+      # Model Provider Credentials  
+      - name: OPENAI_API_KEY_SECRET
+        description: "OpenAI API key for primary model provider"
+        
+      # Observability
+      - name: LANGFUSE_PUBLIC_KEY
+        description: "Langfuse public key for observability"
+      - name: LANGFUSE_SECRET_KEY
+        description: "Langfuse secret key for observability"
+        
+  runtime:
+    timeout: 300
+    memory: 1024
+    concurrent_executions: 5
+    
+  deployment:
+    auto_scaling:
+      enabled: true
+      min_instances: 1
+      max_instances: 10
+      target_utilization: 70
+      
+    vpc:
+      enabled: true
+      subnet_type: private
+      
+    monitoring:
+      cloudwatch:
+        enabled: true
+        log_retention_days: 30
+      
+      metrics:
+        - agent_invocations
+        - tool_executions
+        - response_time
+        - error_rate
+        - music_searches
+        - playlist_creations
