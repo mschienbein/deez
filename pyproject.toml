@@ -4,38 +4,105 @@ version = "0.1.0"
 description = "AI-powered music agent for multi-platform music discovery and management"
 readme = "README.md"
 requires-python = ">=3.10"
+authors = [
+    {name = "Music Agent Team", email = "team@example.com"},
+]
+keywords = ["music", "ai", "agent", "strands", "deezer", "spotify", "youtube"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
 dependencies = [
-    "strands-agents==1.6.0",
-    "strands-agents-tools>=0.2.5",
+    # Core agent framework
+    "strands[openai]>=1.0.0",
+    "openai>=1.0.0",
+    
+    # AWS integration
     "boto3>=1.40.20",
+    "botocore>=1.35.20",
+    
+    # Web and HTTP
     "requests>=2.32.5",
+    "httpx>=0.28.1",
+    "aiohttp>=3.12.15",
+    "beautifulsoup4>=4.13.5",
+    "lxml>=6.0.1",
+    
+    # Data handling and validation
     "pydantic>=2.11.7",
     "python-dotenv>=1.1.1",
+    
+    # Music and audio processing
     "yt-dlp>=2025.8.27",
     "mutagen>=1.47.0",
     "pycryptodomex>=3.23.0",
     "browser-cookie3>=0.20.1",
-    "httpx>=0.28.1",
-    "beautifulsoup4>=4.13.5",
-    "lxml>=6.0.1",
-    "aiohttp>=3.12.15",
-    "aiosqlite>=0.21.0",
+    
+    # Database
     "sqlalchemy>=2.0.43",
+    "aiosqlite>=0.21.0",
     "alembic>=1.16.5",
+    
+    # Authentication and security
     "pyotp>=2.9.0",
-    "rich>=14.1.0",
+    
+    # CLI and user interface
+    "rich>=13.0.0",
+    "click>=8.0.0",
+    
+    # Utilities
+    "pathlib",
+    "typing-extensions>=4.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
+    # Testing
     "pytest>=8.4.1",
-    "pytest-asyncio>=1.1.0",
+    "pytest-asyncio>=0.21.1",
     "pytest-mock>=3.14.1",
-    "black>=25.1.0",
-    "ruff>=0.12.11",
-    "mypy>=1.17.1",
-    "ipython>=9.4.0",
+    "pytest-cov>=4.0.0",
+    
+    # Code quality
+    "black>=24.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.8.0",
+    "pre-commit>=3.0.0",
+    
+    # Development tools
+    "ipython>=8.0.0",
+    "jupyter>=1.0.0",
+    "notebook>=7.0.0",
+    
+    # Documentation
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
 ]
+
+all = [
+    # Include all optional dependencies
+    "music-agent[dev]",
+]
+
+[project.scripts]
+music-agent = "music_agent.cli.interface:run_cli"
+music-auth-deezer = "music_agent.auth.deezer_auth:run_deezer_auth"
+music-auth-spotify = "music_agent.auth.spotify_auth:run_spotify_auth"
+music-auth-youtube = "music_agent.auth.youtube_auth:run_youtube_auth"
+
+[project.urls]
+Homepage = "https://github.com/example/music-agent"
+Repository = "https://github.com/example/music-agent"
+Issues = "https://github.com/example/music-agent/issues"
+Documentation = "https://music-agent.readthedocs.io/"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
@@ -60,3 +127,106 @@ ignore = ["E501"]
 python_version = "3.10"
 warn_return_any = true
 warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_any_generics = true
+no_implicit_optional = true
+show_error_codes = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "--verbose --cov=src/music_agent --cov-report=html --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src/music_agent"]
+omit = [
+    "tests/*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]
+
+# ====================================
+# UV Tool Scripts Configuration
+# ====================================
+
+[tool.uv]
+dev-dependencies = [
+    "music-agent[dev]",
+]
+
+[tool.uv.scripts]
+# Main application
+start = "python -m music_agent.cli.interface"
+run = "python -m music_agent.cli.interface"
+music-agent = "python -m music_agent.cli.interface"
+
+# Authentication helpers
+auth-deezer = "python -m music_agent.auth.deezer_auth"
+auth-spotify = "python -m music_agent.auth.spotify_auth"  
+auth-youtube = "python -m music_agent.auth.youtube_auth"
+
+# Development and testing
+test = "pytest"
+test-verbose = "pytest -v"
+test-cov = "pytest --cov=src/music_agent --cov-report=html --cov-report=term-missing"
+test-fast = "pytest -x"
+
+# Code quality
+lint = "ruff check src/ tests/"
+lint-fix = "ruff check --fix src/ tests/"
+format = "black src/ tests/"
+format-check = "black --check src/ tests/"
+type-check = "mypy src/"
+
+# Combined quality checks
+check-all = ["lint", "format-check", "type-check"]
+fix-all = ["lint-fix", "format"]
+
+# Database operations
+db-init = "python -m music_agent.database.schema"
+db-migrate = "python -m alembic upgrade head"
+db-reset = "python -c \"from music_agent.database.schema import reset_database; reset_database()\""
+
+# Agent operations
+agent-status = "python -c \"from music_agent.agent.core import MusicAgent; agent = MusicAgent(); print(agent.get_agent_status())\""
+agent-test = "python -c \"from music_agent.agent.core import MusicAgent; agent = MusicAgent(); print(agent.chat('test query'))\""
+
+# Music service tests
+test-deezer = "python -c \"from music_agent.integrations.deezer import deezer_search; print(deezer_search('test', 3))\""
+test-spotify = "python -c \"from music_agent.integrations.spotify import spotify_search; print(spotify_search('test', 3))\""
+test-youtube = "python -c \"from music_agent.integrations.youtube import YouTubeIntegration; yt = YouTubeIntegration(); print(yt.search('test', 3))\""
+test-all-services = ["test-deezer", "test-spotify", "test-youtube"]
+
+# Development server (if web interface added later)
+dev = "python -m music_agent.cli.interface"
+serve = "python -m music_agent.cli.interface"
+
+# Documentation
+docs-build = "mkdocs build"
+docs-serve = "mkdocs serve"
+docs-deploy = "mkdocs gh-deploy"
+
+# Clean up
+clean = [
+    "python -c \"import shutil; import pathlib; [shutil.rmtree(p, ignore_errors=True) for p in [pathlib.Path('dist'), pathlib.Path('build'), pathlib.Path('.pytest_cache'), pathlib.Path('htmlcov'), pathlib.Path('.coverage'), pathlib.Path('.mypy_cache'), pathlib.Path('.ruff_cache')]]\"",
+]
+
+# Install commands
+install = "uv sync"
+install-dev = "uv sync --extra dev"
+install-all = "uv sync --extra all"
+
+# Build and publish (for future)
+build = "python -m build"
+publish-test = "twine upload --repository testpypi dist/*"
+publish = "twine upload dist/*"
