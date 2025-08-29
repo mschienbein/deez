@@ -180,6 +180,7 @@ class MusicAgentCLI:
 - `search deezer <query>` - Search only on Deezer  
 - `search spotify <query>` - Search only on Spotify
 - `search youtube <query>` - Search only on YouTube
+- `download <query>` - Search and download a track from Deezer
 
 **📝 Playlist Management**
 - `create playlist <name>` - Create a new playlist
@@ -225,6 +226,40 @@ You can also use natural language:
         
         self.console.print(help_panel)
         self.console.print()
+    
+    def process_download_command(self, command: str):
+        """Process download commands."""
+        parts = command.strip().split(maxsplit=1)
+        
+        if len(parts) < 2:
+            self.console.print("❌ Usage: download <search query>", style="red")
+            return
+            
+        query = parts[1]
+        
+        with self.console.status("[bold green]Searching and preparing download...") as status:
+            try:
+                from ..tools.download_tool import search_and_download
+                
+                result = search_and_download(query, platform="deezer")
+                
+                # Display result in a nice panel
+                if "✅" in result or "✓" in result:
+                    panel = Panel(
+                        result,
+                        title="💿 Download Complete",
+                        border_style="green",
+                        padding=(1, 2)
+                    )
+                    self.console.print(panel)
+                elif "❌" in result or "Error" in result or "Failed" in result:
+                    self.console.print(result, style="red")
+                else:
+                    self.console.print(result)
+                    
+            except Exception as e:
+                self.console.print(f"❌ Download failed: {e}", style="red")
+                logger.error(f"Download command error: {e}")
     
     def process_search_command(self, command: str):
         """Process search commands."""
@@ -496,6 +531,10 @@ You can also use natural language:
                     self.process_search_command(user_input)
                     continue
                     
+                elif user_input.lower().startswith("download"):
+                    self.process_download_command(user_input)
+                    continue
+                    
                 elif user_input.lower().startswith("auth"):
                     self.process_auth_command(user_input)
                     continue
@@ -522,3 +561,7 @@ def run_cli():
     """Main CLI entry point."""
     cli = MusicAgentCLI()
     cli.run_interactive_mode()
+
+
+if __name__ == "__main__":
+    run_cli()

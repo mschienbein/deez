@@ -21,7 +21,8 @@ classifiers = [
 dependencies = [
     # Core agent framework
     "strands-agents==1.6.0",
-    "strands-agents-tools==0.2.5",  
+    "strands-agents-tools==0.2.5",
+    "openai>=1.0.0",  # Added for OpenAI API
     
     # AWS integration
     "boto3>=1.40.20",
@@ -114,7 +115,7 @@ where = ["src"]
 
 [tool.black]
 line-length = 100
-target-version = ["py310"]
+target-version = ["py312"]
 
 [tool.ruff]
 line-length = 100
@@ -122,7 +123,7 @@ select = ["E", "F", "I", "N", "W"]
 ignore = ["E501"]
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -154,7 +155,7 @@ exclude_lines = [
 ]
 
 # ====================================
-# UV Tool Scripts Configuration
+# UV Tool Configuration
 # ====================================
 
 [tool.uv]
@@ -162,69 +163,5 @@ dev-dependencies = [
     "music-agent[dev]",
 ]
 
-[tool.uv.scripts]
-# Main application
-start = "python -m music_agent.cli.interface"
-run = "python -m music_agent.cli.interface"
-music-agent = "python -m music_agent.cli.interface"
-
-# Authentication helpers
-auth-deezer = "python -m music_agent.auth.deezer_auth"
-auth-spotify = "python -m music_agent.auth.spotify_auth"  
-auth-youtube = "python -m music_agent.auth.youtube_auth"
-
-# Development and testing
-test = "pytest"
-test-verbose = "pytest -v"
-test-cov = "pytest --cov=src/music_agent --cov-report=html --cov-report=term-missing"
-test-fast = "pytest -x"
-
-# Code quality
-lint = "ruff check src/ tests/"
-lint-fix = "ruff check --fix src/ tests/"
-format = "black src/ tests/"
-format-check = "black --check src/ tests/"
-type-check = "mypy src/"
-
-# Combined quality checks
-check-all = ["lint", "format-check", "type-check"]
-fix-all = ["lint-fix", "format"]
-
-# Database operations
-db-init = "python -m music_agent.database.schema"
-db-migrate = "python -m alembic upgrade head"
-db-reset = "python -c \"from music_agent.database.schema import reset_database; reset_database()\""
-
-# Agent operations
-agent-status = "python -c \"from music_agent.agent.core import MusicAgent; agent = MusicAgent(); print(agent.get_agent_status())\""
-agent-test = "python -c \"from music_agent.agent.core import MusicAgent; agent = MusicAgent(); print(agent.chat('test query'))\""
-
-# Music service tests
-test-deezer = "python -c \"from music_agent.integrations.deezer import deezer_search; print(deezer_search('test', 3))\""
-test-spotify = "python -c \"from music_agent.integrations.spotify import spotify_search; print(spotify_search('test', 3))\""
-test-youtube = "python -c \"from music_agent.integrations.youtube import YouTubeIntegration; yt = YouTubeIntegration(); print(yt.search('test', 3))\""
-test-all-services = ["test-deezer", "test-spotify", "test-youtube"]
-
-# Development server (if web interface added later)
-dev = "python -m music_agent.cli.interface"
-serve = "python -m music_agent.cli.interface"
-
-# Documentation
-docs-build = "mkdocs build"
-docs-serve = "mkdocs serve"
-docs-deploy = "mkdocs gh-deploy"
-
-# Clean up
-clean = [
-    "python -c \"import shutil; import pathlib; [shutil.rmtree(p, ignore_errors=True) for p in [pathlib.Path('dist'), pathlib.Path('build'), pathlib.Path('.pytest_cache'), pathlib.Path('htmlcov'), pathlib.Path('.coverage'), pathlib.Path('.mypy_cache'), pathlib.Path('.ruff_cache')]]\"",
-]
-
-# Install commands
-install = "uv sync"
-install-dev = "uv sync --extra dev"
-install-all = "uv sync --extra all"
-
-# Build and publish (for future)
-build = "python -m build"
-publish-test = "twine upload --repository testpypi dist/*"
-publish = "twine upload dist/*"
+# Note: uv scripts are better defined using project.scripts above
+# or run directly with: uv run python -m module_name

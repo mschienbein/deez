@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from strands import Agent
 from strands.models.openai import OpenAIModel
-from strands_agents_tools import (
+from strands_tools import (
     calculator,
     current_time,
     file_read,
@@ -54,28 +54,30 @@ class MusicAgent:
                 },
                 model_id=self.app_config.openai.model,
                 params={
-                    "temperature": 0.7,
-                    "max_tokens": 4000,
+                    "temperature": 1,
+                    "max_completion_tokens": 4000,
                 }
             )
             
+            # Get all tools including custom ones
+            all_tools = self._get_all_tools()
+            
             self.agent = Agent(
                 model=openai_model,
-                tools=self._get_tools(),
+                tools=all_tools,
                 system_prompt=self._get_system_prompt(),
             )
             logger.info(f"OpenAI agent initialized with model: {self.app_config.openai.model}")
+            logger.info(f"Registered {len(all_tools)} tools")
             
         except Exception as e:
             logger.error(f"Failed to initialize OpenAI agent: {e}")
             raise RuntimeError(f"Failed to initialize OpenAI agent: {e}")
-        
-        # Add custom tools
-        self._register_custom_tools()
     
-    def _get_tools(self):
-        """Get the standard Strands tools."""
-        return [
+    def _get_all_tools(self):
+        """Get all tools including standard and custom ones."""
+        # Start with standard Strands tools
+        tools = [
             http_request,
             python_repl,
             shell,
@@ -85,6 +87,39 @@ class MusicAgent:
             current_time,
             use_aws,
         ]
+        
+        # Add custom music tools
+        try:
+            from ..tools.music_tools import (
+                analyze_music_trends,
+                create_cross_platform_playlist,
+                export_playlist,
+                get_track_info,
+                search_music,
+                match_track_across_platforms,
+            )
+            from ..tools.download_tool import (
+                download_track,
+                search_and_download,
+            )
+            
+            tools.extend([
+                search_music,
+                get_track_info,
+                create_cross_platform_playlist,
+                analyze_music_trends,
+                export_playlist,
+                match_track_across_platforms,
+                download_track,
+                search_and_download,
+            ])
+            
+            logger.info(f"Added {8} custom music tools")
+            
+        except ImportError as e:
+            logger.warning(f"Failed to import custom tools: {e}")
+        
+        return tools
     
     def _get_system_prompt(self) -> str:
         """Get the system prompt for the agent."""
@@ -118,30 +153,6 @@ class MusicAgent:
         Be helpful, accurate, and respect user preferences for music quality and platforms.
         """
     
-    def _register_custom_tools(self):
-        """Register custom tools for music operations."""
-        try:
-            from ..tools.music_tools import (
-                analyze_music_trends,
-                create_cross_platform_playlist,
-                export_playlist,
-                get_track_info,
-                search_music,
-                match_track_across_platforms,
-            )
-            
-            # Register tools with agent
-            self.agent.register_tool(search_music)
-            self.agent.register_tool(get_track_info)
-            self.agent.register_tool(create_cross_platform_playlist)
-            self.agent.register_tool(analyze_music_trends)
-            self.agent.register_tool(export_playlist)
-            self.agent.register_tool(match_track_across_platforms)
-            
-            logger.info("Custom music tools registered")
-            
-        except ImportError as e:
-            logger.warning(f"Failed to import custom tools: {e}")
     
     def chat(self, message: str, context: Optional[Dict[str, Any]] = None) -> str:
         """Process a chat message and return the response."""
@@ -151,7 +162,17 @@ class MusicAgent:
                 message = f"Context: {json.dumps(context)}\n\nUser: {message}"
             
             # Process message through agent
-            response = self.agent.run(message)
+            result = self.agent(message)
+            
+            # Extract the text response from AgentResult
+            if hasattr(result, 'output'):
+                response = result.output
+            elif hasattr(result, 'text'):
+                response = result.text
+            elif isinstance(result, str):
+                response = result
+            else:
+                response = str(result)
             
             # Log interaction
             logger.info(f"User: {message[:100]}...")
@@ -170,24 +191,13 @@ class MusicAgent:
         limit: int = 10
     ) -> List[Dict[str, Any]]:
         """Search for music across platforms."""
-        prompt = f"""Search for music with the following parameters:
-        - Query: {query}
-        - Platform: {platform}
-        - Limit: {limit}
-        
-        Return the results as a JSON list with track information.
-        """
-        
         try:
-            response = self.agent.run(prompt)
+            # Import and use the search_music tool directly
+            from ..tools.music_tools import search_music
             
-            try:
-                # Parse JSON response
-                results = json.loads(response)
-                return results
-            except json.JSONDecodeError:
-                logger.error(f"Failed to parse search results: {response}")
-                return []
+            # Call the tool directly
+            results = search_music(query, platform, limit)
+            return results if results else []
                 
         except Exception as e:
             logger.error(f"Search error: {e}")

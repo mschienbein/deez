@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from strands_agents import tool
+from strands import tool
 
 from ..database.schema import (
     ListeningHistory,
@@ -273,6 +273,8 @@ def analyze_music_trends(timeframe: str = "month") -> Dict[str, Any]:
 @tool
 def export_playlist(playlist_id: str, format: str = "json") -> str:
     """Export playlist in various formats."""
+    import json  # Add missing import
+    
     try:
         session = db_session_maker()
         

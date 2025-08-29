@@ -239,3 +239,7 @@ def run_deezer_auth():
     """Standalone function to run Deezer authentication."""
     helper = DeezerAuthHelper()
     return helper.start_auth_flow()
+
+
+if __name__ == "__main__":
+    run_deezer_auth()

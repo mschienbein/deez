@@ -273,3 +273,7 @@ def run_spotify_auth():
     """Standalone function to run Spotify authentication."""
     helper = SpotifyAuthHelper()
     return helper.start_auth_flow()
+
+
+if __name__ == "__main__":
+    run_spotify_auth()

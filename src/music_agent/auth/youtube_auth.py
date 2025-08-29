@@ -368,3 +368,7 @@ def run_youtube_auth():
     """Standalone function to run YouTube authentication."""
     helper = YouTubeAuthHelper()
     return helper.start_auth_flow()
+
+
+if __name__ == "__main__":
+    run_youtube_auth()

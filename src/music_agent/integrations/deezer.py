@@ -22,6 +22,8 @@ class DeezerIntegration:
         self.csrf_token = None
         self.user_id = None
         self.license_token = None
+        self.sound_quality = None  # Will be set based on user subscription
+        self.prefer_flac = True  # Default to preferring FLAC when available
         
         if self.arl:
             self._authenticate()
@@ -38,7 +40,23 @@ class DeezerIntegration:
                 user_data = response["results"]
                 self.user_id = user_data.get("USER", {}).get("USER_ID")
                 self.csrf_token = user_data.get("checkForm")
-                logger.info(f"Authenticated as Deezer user {self.user_id}")
+                # Get license token and sound quality from user options
+                options = user_data.get("USER", {}).get("OPTIONS", {})
+                self.license_token = options.get("license_token")
+                
+                # Check if user has FLAC support (lossless subscription)
+                web_sound_quality = options.get("web_sound_quality", {})
+                self.has_flac = web_sound_quality.get("lossless", False)
+                
+                # Set preferred quality
+                if self.has_flac and self.prefer_flac:
+                    self.sound_quality = "FLAC"
+                elif self.has_flac or web_sound_quality.get("high", False):
+                    self.sound_quality = "MP3_320"
+                else:
+                    self.sound_quality = "MP3_128"
+                
+                logger.info(f"Authenticated as Deezer user {self.user_id} with {self.sound_quality} quality")
                 return True
             else:
                 logger.error("Invalid ARL cookie")
@@ -63,24 +81,39 @@ class DeezerIntegration:
         return response.json()
     
     def search(self, query: str, limit: int = 10) -> List[Dict[str, Any]]:
-        """Search for music on Deezer."""
+        """Search for music on Deezer using public API."""
         try:
-            # Search tracks
-            response = self._api_call("search.music", {
-                "query": query,
-                "start": 0,
-                "nb": limit,
-                "suggest": True,
-                "artist_suggest": True,
-                "top_tracks": True,
-            })
+            # Use public Deezer API for search (more reliable)
+            import urllib.parse
+            search_query = urllib.parse.quote_plus(query)
+            url = f"https://api.deezer.com/search/track?q={search_query}&limit={limit}"
+            
+            response = self.session.get(url)
+            response.raise_for_status()
+            data = response.json()
             
             results = []
-            if response.get("results") and response["results"].get("data"):
-                for item in response["results"]["data"]:
-                    if item.get("__TYPE__") == "song":
-                        track_info = self._format_track_info(item)
-                        results.append(track_info)
+            if data.get("data"):
+                for item in data["data"]:
+                    # Format the public API response
+                    track_info = {
+                        "id": str(item.get("id", "")),
+                        "title": item.get("title", ""),
+                        "artist": item.get("artist", {}).get("name", ""),
+                        "album": item.get("album", {}).get("title", ""),
+                        "duration": item.get("duration", 0),
+                        "track_number": item.get("track_position", 0),
+                        "disc_number": item.get("disk_number", 1),
+                        "release_date": "",  # Not in public API response
+                        "isrc": "",  # Not in public API response
+                        "explicit": bool(item.get("explicit_lyrics", False)),
+                        "preview_url": item.get("preview", ""),
+                        "cover_art": item.get("album", {}).get("cover_medium", ""),
+                        "platform": "deezer",
+                        "platform_url": item.get("link", f"https://deezer.com/track/{item.get('id', '')}"),
+                        "available": True,
+                    }
+                    results.append(track_info)
             
             return results
             
@@ -191,45 +224,193 @@ class DeezerIntegration:
         
         return None
     
-    def get_download_url(self, track_id: str, quality: str = "MP3_320") -> Optional[str]:
-        """Get download URL for a track."""
+    def download_track(self, track_id: str, output_path: str, quality: Optional[str] = None) -> bool:
+        """Download and decrypt a track from Deezer.
+        
+        Args:
+            track_id: Deezer track ID
+            output_path: Path to save the downloaded file
+            quality: Override quality (FLAC, MP3_320, MP3_128)
+        
+        Returns:
+            True if download successful, False otherwise
+        """
         if not self.arl:
-            logger.error("ARL required for download URLs")
-            return None
+            logger.error("ARL required for downloads")
+            return False
+        
+        if not self.license_token:
+            logger.error("License token not available")
+            return False
         
         try:
-            # Get track token
+            # Import crypto utilities
+            from ..utils.crypto import calculate_blowfish_key, decrypt_track_stream
+            
+            # Use specified quality or default
+            use_quality = quality or self.sound_quality
+            
+            # Get track data
             response = self._api_call("song.getListData", {
                 "sng_ids": [int(track_id)]
             })
             
             if not response.get("results") or not response["results"].get("data"):
-                return None
+                logger.error(f"No track data found for ID {track_id}")
+                return False
             
             track_data = response["results"]["data"][0]
             track_token = track_data.get("TRACK_TOKEN")
             
             if not track_token:
-                return None
+                logger.error(f"No track token found for ID {track_id}")
+                return False
             
-            # Get download URL
-            url_response = self._api_call("song.getDownloadUrl", {
-                "license_token": self.license_token,
-                "media": [{
-                    "type": "FULL",
-                    "formats": [{"cipher": "BF_CBC_STRIPE", "format": quality}]
-                }],
-                "track_tokens": [track_token]
-            })
+            # Check available formats in track data
+            available_formats = []
+            if track_data.get("FILESIZE_FLAC") and int(track_data["FILESIZE_FLAC"]) > 0:
+                available_formats.append("FLAC")
+            if track_data.get("FILESIZE_MP3_320") and int(track_data["FILESIZE_MP3_320"]) > 0:
+                available_formats.append("MP3_320")
+            if track_data.get("FILESIZE_MP3_256") and int(track_data["FILESIZE_MP3_256"]) > 0:
+                available_formats.append("MP3_256")
+            if track_data.get("FILESIZE_MP3_128") and int(track_data["FILESIZE_MP3_128"]) > 0:
+                available_formats.append("MP3_128")
             
-            if url_response.get("results") and url_response["results"].get("data"):
-                return url_response["results"]["data"][0].get("media", [{}])[0].get("sources", [{}])[0].get("url")
+            # Determine best available quality
+            if use_quality not in available_formats:
+                # Fallback to best available
+                if "FLAC" in available_formats:
+                    use_quality = "FLAC"
+                elif "MP3_320" in available_formats:
+                    use_quality = "MP3_320"
+                elif "MP3_256" in available_formats:
+                    use_quality = "MP3_256"
+                elif "MP3_128" in available_formats:
+                    use_quality = "MP3_128"
+                else:
+                    logger.error(f"No formats available for track {track_id}")
+                    return False
+                    
+                logger.info(f"Using {use_quality} (best available)")
             
-            return None
+            # Get download URL from media API
+            media_response = self.session.post(
+                "https://media.deezer.com/v1/get_url",
+                json={
+                    'license_token': self.license_token,
+                    'media': [{
+                        'type': "FULL",
+                        'formats': [{'cipher': 'BF_CBC_STRIPE', 'format': use_quality}]
+                    }],
+                    'track_tokens': [track_token]
+                }
+            )
+            media_response.raise_for_status()
+            media_data = media_response.json()
+            
+            if not media_data.get("data") or not media_data["data"]:
+                logger.error(f"No data in media response for track {track_id}")
+                return False
+                
+            media_list = media_data["data"][0].get("media", [])
+            if not media_list:
+                logger.error(f"No download URL available for track {track_id} in {use_quality}")
+                return False
+            
+            # Get the first source URL
+            sources = media_list[0].get("sources", [])
+            if not sources:
+                logger.error(f"No sources available for track {track_id}")
+                return False
+                
+            url = sources[0].get("url")
+            if not url:
+                logger.error(f"No URL in sources for track {track_id}")
+                return False
+            
+            # Calculate decryption key
+            decrypt_key = calculate_blowfish_key(track_id)
+            
+            # Download and decrypt the track
+            logger.info(f"Downloading track {track_id} in {use_quality} quality...")
+            download_response = self.session.get(url, stream=True)
+            download_response.raise_for_status()
+            
+            # Write decrypted data to file
+            with open(output_path, "wb") as output_file:
+                decrypt_track_stream(download_response, output_file, decrypt_key)
+            
+            # Add metadata
+            self._write_track_metadata(output_path, track_data, use_quality == "FLAC")
+            
+            logger.info(f"Successfully downloaded track {track_id} to {output_path}")
+            return True
             
         except Exception as e:
-            logger.error(f"Failed to get download URL for {track_id}: {e}")
-            return None
+            logger.error(f"Failed to download track {track_id}: {e}")
+            return False
+    
+    def _write_track_metadata(self, file_path: str, track_data: Dict[str, Any], is_flac: bool) -> None:
+        """Write metadata to downloaded track file.
+        
+        Args:
+            file_path: Path to the audio file
+            track_data: Track metadata from Deezer API
+            is_flac: Whether the file is FLAC format
+        """
+        try:
+            from mutagen.flac import FLAC, Picture
+            from mutagen.mp3 import MP3
+            from mutagen.id3 import TIT2, TALB, TPE1, TRCK, TDRC, TPOS, APIC, TPE2, PictureType
+            import requests
+            
+            if is_flac:
+                audio = FLAC(file_path)
+                audio["title"] = track_data.get("SNG_TITLE", "")
+                audio["artist"] = track_data.get("ART_NAME", "")
+                audio["album"] = track_data.get("ALB_TITLE", "")
+                audio["tracknumber"] = str(track_data.get("TRACK_NUMBER", ""))
+                audio["discnumber"] = str(track_data.get("DISK_NUMBER", ""))
+                audio["date"] = track_data.get("PHYSICAL_RELEASE_DATE", "")[:4] if track_data.get("PHYSICAL_RELEASE_DATE") else ""
+                
+                # Add album art if available
+                if track_data.get("ALB_PICTURE"):
+                    cover_url = self._get_cover_url(track_data["ALB_PICTURE"], "1000x1000")
+                    cover_data = requests.get(cover_url).content
+                    picture = Picture()
+                    picture.type = PictureType.COVER_FRONT
+                    picture.mime = "image/jpeg"
+                    picture.data = cover_data
+                    audio.add_picture(picture)
+            else:
+                audio = MP3(file_path)
+                audio["TIT2"] = TIT2(encoding=3, text=track_data.get("SNG_TITLE", ""))
+                audio["TPE1"] = TPE1(encoding=3, text=track_data.get("ART_NAME", ""))
+                audio["TALB"] = TALB(encoding=3, text=track_data.get("ALB_TITLE", ""))
+                audio["TRCK"] = TRCK(encoding=3, text=str(track_data.get("TRACK_NUMBER", "")))
+                audio["TPOS"] = TPOS(encoding=3, text=str(track_data.get("DISK_NUMBER", "")))
+                date = track_data.get("PHYSICAL_RELEASE_DATE", "")[:4] if track_data.get("PHYSICAL_RELEASE_DATE") else ""
+                if date:
+                    audio["TDRC"] = TDRC(encoding=3, text=date)
+                
+                # Add album art
+                if track_data.get("ALB_PICTURE"):
+                    cover_url = self._get_cover_url(track_data["ALB_PICTURE"], "1000x1000")
+                    cover_data = requests.get(cover_url).content
+                    audio["APIC"] = APIC(
+                        encoding=3,
+                        mime="image/jpeg",
+                        type=PictureType.COVER_FRONT,
+                        desc="Cover",
+                        data=cover_data
+                    )
+            
+            audio.save()
+            logger.info(f"Metadata written to {file_path}")
+            
+        except Exception as e:
+            logger.warning(f"Could not write metadata: {e}")
     
     def _format_track_info(self, track_data: Dict[str, Any]) -> Dict[str, Any]:
         """Format track data to standardized format."""
