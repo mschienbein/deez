@@ -24,6 +24,11 @@ dependencies = [
     "strands-agents-tools==0.2.5",
     "openai>=1.0.0",  # Added for OpenAI API
     
+    # Graphiti and Neo4j
+    "graphiti-core>=0.3.0",
+    "neo4j>=5.0.0",
+    "asyncpg>=0.29.0",  # PostgreSQL async driver
+    
     # AWS integration
     "boto3>=1.40.20",
     "botocore>=1.40.20",
@@ -44,6 +49,7 @@ dependencies = [
     "mutagen>=1.47.0",
     "pycryptodomex>=3.23.0",
     "browser-cookie3>=0.20.1",
+    "slskd-api>=0.1.0",  # Soulseek/slskd API client
     
     # Database
     "sqlalchemy>=2.0.43",
@@ -63,6 +69,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+rekordbox = [
+    "sqlcipher3>=0.5.0",  # For Rekordbox DB decryption - requires sqlcipher lib
+]
 dev = [
     # Testing
     "pytest>=8.4.1",
@@ -92,10 +101,35 @@ all = [
 ]
 
 [project.scripts]
+# Main CLI
+deez = "music_agent.cli.interface:run_cli"
 music-agent = "music_agent.cli.interface:run_cli"
-music-auth-deezer = "music_agent.auth.deezer_auth:run_deezer_auth"
-music-auth-spotify = "music_agent.auth.spotify_auth:run_spotify_auth"
-music-auth-youtube = "music_agent.auth.youtube_auth:run_youtube_auth"
+
+# Authentication
+auth-deezer = "music_agent.auth.deezer_auth:run_deezer_auth"
+auth-spotify = "music_agent.auth.spotify_auth:run_spotify_auth"
+auth-youtube = "music_agent.auth.youtube_auth:run_youtube_auth"
+
+# Database management
+init-db = "scripts.init_databases:main"
+neo4j-status = "scripts.database_tools:check_neo4j"
+postgres-status = "scripts.database_tools:check_postgres"
+rekordbox-sync = "scripts.sync_rekordbox:main"
+
+# Integrations
+test-soulseek = "scripts.test_soulseek:main"
+
+# Docker services
+up = "scripts.docker_tools:start_services"
+down = "scripts.docker_tools:stop_services"
+logs = "scripts.docker_tools:show_logs"
+status = "scripts.docker_tools:check_status"
+
+# Development tools
+test = "pytest:main"
+lint = "scripts.dev_tools:run_lint"
+format = "scripts.dev_tools:run_format"
+clean = "scripts.dev_tools:clean_project"
 
 [project.urls]
 Homepage = "https://github.com/example/music-agent"
@@ -163,5 +197,5 @@ dev-dependencies = [
     "music-agent[dev]",
 ]
 
-# Note: uv scripts are better defined using project.scripts above
-# or run directly with: uv run python -m module_name
+# UV script aliases for common commands
+# Note: UV doesn't support aliases in this way. Use project.scripts instead.

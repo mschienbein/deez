@@ -1,0 +1,17 @@
+# Docker Compose Override Example
+# Copy this to docker-compose.override.yml and update with your credentials
+# docker-compose.override.yml is automatically loaded by Docker Compose
+# and is already in .gitignore
+
+version: '3.8'
+
+services:
+  slskd:
+    environment:
+      # Override with your Soulseek credentials
+      - SLSKD_SLSK_USERNAME=your-soulseek-username
+      - SLSKD_SLSK_PASSWORD=your-soulseek-password
+      # Optional: Enable authentication for the web UI
+      # - SLSKD_NO_AUTH=false
+      # - SLSKD_WEB_USERNAME=your-web-username
+      # - SLSKD_WEB_PASSWORD=your-web-password

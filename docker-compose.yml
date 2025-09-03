@@ -1,0 +1,147 @@
+version: '3.8'
+
+services:
+  # Neo4j Graph Database for Graphiti Memory
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: deez-neo4j
+    restart: unless-stopped
+    ports:
+      - "7474:7474"  # HTTP/Browser
+      - "7687:7687"  # Bolt protocol
+    environment:
+      - NEO4J_AUTH=${NEO4J_AUTH:-neo4j/deezmusic123}
+      - NEO4J_PLUGINS=["apoc", "graph-data-science"]
+      - NEO4J_dbms_memory_pagecache_size=2G
+      - NEO4J_dbms_memory_heap_initial__size=1G
+      - NEO4J_dbms_memory_heap_max__size=2G
+      - NEO4J_dbms_default__database=music
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+      - neo4j_import:/var/lib/neo4j/import
+      - neo4j_plugins:/plugins
+    networks:
+      - deez-network
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "deezmusic123", "RETURN 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  # PostgreSQL for hybrid architecture (factual data)
+  postgres:
+    image: postgres:16-alpine
+    container_name: deez-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-music_agent}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-music123}
+      - POSTGRES_DB=${POSTGRES_DB:-music_catalog}
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - deez-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U music_agent"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # slskd for Soulseek P2P integration
+  slskd:
+    image: slskd/slskd:latest
+    container_name: deez-slskd
+    restart: unless-stopped
+    ports:
+      - "5030:5030"     # Web UI & API
+      - "5031:5031"     # HTTPS (optional)
+      - "50300:50300"   # Soulseek protocol
+    environment:
+      - SLSKD_REMOTE_CONFIGURATION=true
+      - SLSKD_REMOTE_FILE_MANAGEMENT=true
+      - SLSKD_NO_AUTH=true
+      - SLSKD_SLSK_USERNAME=${SLSKD_USERNAME}
+      - SLSKD_SLSK_PASSWORD=${SLSKD_PASSWORD}
+      - SLSKD_APP_DIR=/app
+      - SLSKD_RETENTION_DAYS=30
+      - SLSKD_ENABLE_SECURITY=true
+    volumes:
+      - ./slskd/config:/app/config
+      - ./slskd/downloads:/app/downloads
+      - ./slskd/incomplete:/app/incomplete
+      - ./slskd/shared:/app/shared
+      - ./slskd/logs:/app/logs
+    networks:
+      - deez-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:5030/api/v0/application"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: deez-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - deez-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MinIO for music file storage (S3-compatible)
+  minio:
+    image: minio/minio:latest
+    container_name: deez-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # Console
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin123}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - deez-network
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+volumes:
+  neo4j_data:
+    driver: local
+  neo4j_logs:
+    driver: local
+  neo4j_import:
+    driver: local
+  neo4j_plugins:
+    driver: local
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  deez-network:
+    driver: bridge

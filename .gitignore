@@ -322,3 +322,17 @@ personal_settings.json
 # Development overrides
 dev_config.py
 test_config.py
+
+# ====================================
+# Soulseek/slskd Configuration
+# ====================================
+
+# slskd configuration with credentials
+slskd/config/slskd.yml
+!slskd/config/slskd.yml.example
+
+# slskd data directories (contain downloaded files)
+slskd/downloads/
+slskd/incomplete/
+slskd/shared/
+slskd/logs/

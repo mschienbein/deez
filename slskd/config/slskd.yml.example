@@ -1,0 +1,76 @@
+# slskd Configuration Example
+# https://github.com/slskd/slskd/blob/master/docs/config.md
+# 
+# Copy this file to slskd.yml and update with your credentials
+
+# Web/API Configuration
+web:
+  port: 5030
+  https:
+    disabled: true
+  authentication:
+    disabled: true  # Set to false to enable authentication
+    # username: your-web-username
+    # password: your-web-password
+    # api_keys:
+    #   - key: your-api-key-here
+    #     name: MusicAgent
+    #     role: readwrite
+
+# Soulseek Configuration
+soulseek:
+  username: "your-soulseek-username"  # Your Soulseek username
+  password: "your-soulseek-password"  # Your Soulseek password
+  listen_port: 50300
+  
+# Directories
+directories:
+  downloads: /app/downloads
+  incomplete: /app/incomplete
+  shared:
+    - /app/shared
+
+# File sharing
+shares:
+  directories: []  # Add directories to share
+  filters:
+    # Only share music files
+    include:
+      - "*.mp3"
+      - "*.flac"
+      - "*.wav"
+      - "*.m4a"
+      - "*.ogg"
+    exclude:
+      - "*.txt"
+      - "*.jpg"
+      - "*.png"
+
+# Transfer settings
+transfers:
+  downloads:
+    slots: 10
+  uploads:
+    slots: 5
+
+# Retention
+retention:
+  transfers:
+    upload:
+      succeeded: 
+        days: 7
+      failed:
+        days: 3
+    download:
+      succeeded:
+        days: 30
+      failed:
+        days: 7
+
+# Features
+relay:
+  enabled: false
+  
+# Logging
+logging:
+  level: Information
