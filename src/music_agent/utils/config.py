@@ -135,8 +135,23 @@ class BeatportConfig(BaseModel):
 class DiscogsConfig(BaseModel):
     """Discogs configuration."""
     
-    token: Optional[str] = Field(default=None, description="Discogs personal access token")
+    consumer_key: Optional[str] = Field(default=None, description="Discogs OAuth consumer key")
+    consumer_secret: Optional[str] = Field(default=None, description="Discogs OAuth consumer secret")
+    request_token_url: str = Field(
+        default="https://api.discogs.com/oauth/request_token",
+        description="OAuth request token URL"
+    )
+    authorize_url: str = Field(
+        default="https://www.discogs.com/oauth/authorize", 
+        description="OAuth authorize URL"
+    )
+    access_token_url: str = Field(
+        default="https://api.discogs.com/oauth/access_token",
+        description="OAuth access token URL"
+    )
     user_agent: str = Field(default="DeezMusicAgent/1.0", description="User agent for API requests")
+    user_token: Optional[str] = Field(default=None, description="Discogs personal access token")
+    rate_limit: int = Field(default=60, description="Requests per minute")
 
 
 # ====================================
@@ -330,14 +345,20 @@ class Config(BaseModel):
                 password=os.getenv("BEATPORT_PASSWORD"),
             ),
             discogs=DiscogsConfig(
-                token=os.getenv("DISCOGS_TOKEN"),
+                consumer_key=os.getenv("DISCOGS_CONSUMER_KEY"),
+                consumer_secret=os.getenv("DISCOGS_CONSUMER_SECRET"),
+                request_token_url=os.getenv("DISCOGS_REQUEST_TOKEN_URL", "https://api.discogs.com/oauth/request_token"),
+                authorize_url=os.getenv("DISCOGS_AUTHORIZE_URL", "https://www.discogs.com/oauth/authorize"),
+                access_token_url=os.getenv("DISCOGS_ACCESS_TOKEN_URL", "https://api.discogs.com/oauth/access_token"),
                 user_agent=os.getenv("DISCOGS_USER_AGENT", "DeezMusicAgent/1.0"),
+                user_token=os.getenv("DISCOGS_USER_TOKEN"),
+                rate_limit=int(os.getenv("DISCOGS_RATE_LIMIT", "60")),
             ),
             
             # AI/LLM
             openai=OpenAIConfig(
                 api_key=os.getenv("OPENAI_API_KEY"),
-                model=os.getenv("OPENAI_MODEL", "gpt-5-nano"),
+                model=os.getenv("OPENAI_MODEL", "gpt-5"),
                 embedding_model=os.getenv("EMBEDDING_MODEL", "text-embedding-3-small"),
                 base_url=os.getenv("OPENAI_BASE_URL"),
                 organization=os.getenv("OPENAI_ORGANIZATION"),
@@ -379,3 +400,8 @@ class Config(BaseModel):
 
 # Global configuration instance
 config = Config.from_env()
+
+
+def get_config() -> Config:
+    """Get the global configuration instance."""
+    return config

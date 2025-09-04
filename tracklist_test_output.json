@@ -1,0 +1,50 @@
+{
+  "url": "mock://example",
+  "title": "Carl Cox @ Space Ibiza Closing",
+  "dj": "Carl Cox",
+  "event": "Music Is Revolution Closing Party",
+  "date": "2016-09-20",
+  "genres": [
+    "Techno",
+    "Tech House"
+  ],
+  "tracks": [
+    {
+      "position": 1,
+      "cue": "00:00",
+      "artist": "Carl Cox",
+      "title": "Space Calling",
+      "remix": null,
+      "label": "Intec",
+      "mix_type": null,
+      "is_id": false
+    },
+    {
+      "position": 2,
+      "cue": "05:30",
+      "artist": "Adam Beyer",
+      "title": "Teach Me",
+      "remix": "Len Faki Remix",
+      "label": "Drumcode",
+      "mix_type": "w/",
+      "is_id": false
+    },
+    {
+      "position": 3,
+      "cue": "10:00",
+      "artist": "ID",
+      "title": "ID",
+      "remix": null,
+      "label": null,
+      "mix_type": null,
+      "is_id": true
+    }
+  ],
+  "recording_links": {
+    "soundcloud": "https://soundcloud.com/example"
+  },
+  "stats": {
+    "views": 50000,
+    "favorites": 1200
+  }
+}
