@@ -1,17 +1,20 @@
 """
-Simple tools for 1001 Tracklists integration.
+1001 Tracklists simple tools.
 
-Returns raw data for the agent to process and analyze.
+Provides basic tracklist functionality using the simple integration.
 """
 
 from typing import Dict, Any, List, Optional
+from strands import tool
 
-from ..integrations.tracklists_simple import OneThousandOneTracklists
+from ....integrations.tracklists_simple import OneThousandOneTracklists
+
 
 # Initialize integration
 tracklists = OneThousandOneTracklists()
 
 
+@tool
 def get_tracklist(url: str) -> Dict[str, Any]:
     """
     Fetch a DJ set tracklist from 1001 Tracklists.
@@ -36,6 +39,7 @@ def get_tracklist(url: str) -> Dict[str, Any]:
     return tracklists.get_tracklist(url)
 
 
+@tool
 def search_tracklists(query: str, limit: int = 20) -> List[Dict[str, Any]]:
     """
     Search for tracks on 1001 Tracklists.
@@ -55,6 +59,7 @@ def search_tracklists(query: str, limit: int = 20) -> List[Dict[str, Any]]:
     return tracklists.search(query, limit)
 
 
+@tool
 def get_dj_recent_sets(dj_name: str, limit: int = 10) -> List[Dict[str, Any]]:
     """
     Get recent sets by a specific DJ.
@@ -74,23 +79,7 @@ def get_dj_recent_sets(dj_name: str, limit: int = 10) -> List[Dict[str, Any]]:
     return tracklists.get_dj_sets(dj_name, limit)
 
 
-def get_festival_tracklists(festival_url: str) -> List[Dict[str, Any]]:
-    """
-    Get all DJ sets from a festival.
-    
-    Args:
-        festival_url: 1001 Tracklists festival page URL
-    
-    Returns:
-        List of all sets from the festival
-    
-    Example:
-        >>> sets = get_festival_tracklists("https://www.1001tracklists.com/source/...")
-        >>> print(f"Total sets: {len(sets)}")
-    """
-    return tracklists.get_festival(festival_url)
-
-
+@tool
 def extract_track_list(tracklist_data: Dict[str, Any]) -> List[str]:
     """
     Extract clean track list from tracklist data.
@@ -127,37 +116,7 @@ def extract_track_list(tracklist_data: Dict[str, Any]) -> List[str]:
     return tracks
 
 
-def get_tracklist_stats(tracklist_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Get statistics from a tracklist.
-    
-    Args:
-        tracklist_data: Raw tracklist data
-    
-    Returns:
-        Statistics including track count, ID count, genres
-    
-    Example:
-        >>> data = get_tracklist(url)
-        >>> stats = get_tracklist_stats(data)
-        >>> print(f"Total tracks: {stats['total_tracks']}")
-        >>> print(f"Unknown tracks: {stats['id_tracks']}")
-    """
-    tracks = tracklist_data.get('tracks', [])
-    
-    return {
-        'dj': tracklist_data.get('dj'),
-        'event': tracklist_data.get('event'),
-        'date': tracklist_data.get('date'),
-        'total_tracks': len(tracks),
-        'id_tracks': sum(1 for t in tracks if t.get('is_id')),
-        'genres': tracklist_data.get('genres', []),
-        'has_recording': bool(tracklist_data.get('recording_links')),
-        'views': tracklist_data.get('stats', {}).get('views'),
-        'favorites': tracklist_data.get('stats', {}).get('favorites')
-    }
-
-
+@tool
 def find_common_tracks(tracklist_urls: List[str]) -> Dict[str, int]:
     """
     Find tracks that appear in multiple tracklists.
@@ -189,52 +148,7 @@ def find_common_tracks(tracklist_urls: List[str]) -> Dict[str, int]:
     return dict(sorted(track_counts.items(), key=lambda x: x[1], reverse=True))
 
 
-def analyze_tracklist_progression(tracklist_data: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Analyze the progression of a DJ set.
-    
-    Args:
-        tracklist_data: Raw tracklist data
-    
-    Returns:
-        Analysis of set structure and progression
-    
-    Example:
-        >>> data = get_tracklist(url)
-        >>> analysis = analyze_tracklist_progression(data)
-        >>> print(f"Set sections: {analysis['sections']}")
-    """
-    tracks = tracklist_data.get('tracks', [])
-    
-    # Basic analysis
-    total = len(tracks)
-    if total == 0:
-        return {'error': 'No tracks found'}
-    
-    # Divide into sections
-    intro_end = min(3, total)
-    warmup_end = min(total // 3, total)
-    peak_end = min(2 * total // 3, total)
-    
-    return {
-        'total_tracks': total,
-        'sections': {
-            'intro': tracks[:intro_end],
-            'warmup': tracks[intro_end:warmup_end],
-            'peak': tracks[warmup_end:peak_end],
-            'cooldown': tracks[peak_end:]
-        },
-        'track_density': {
-            'intro': intro_end,
-            'warmup': warmup_end - intro_end,
-            'peak': peak_end - warmup_end,
-            'cooldown': total - peak_end
-        },
-        'has_cue_times': any(t.get('cue') for t in tracks),
-        'mix_types': list(set(t.get('mix_type') for t in tracks if t.get('mix_type')))
-    }
-
-
+@tool
 def export_as_playlist(tracklist_data: Dict[str, Any]) -> str:
     """
     Export tracklist as a simple text playlist.
@@ -287,17 +201,3 @@ def export_as_playlist(tracklist_data: Dict[str, Any]) -> str:
             lines.append(f"{position:3}. {track_str}")
     
     return "\n".join(lines)
-
-
-# Export all tools
-__all__ = [
-    'get_tracklist',
-    'search_tracklists',
-    'get_dj_recent_sets',
-    'get_festival_tracklists',
-    'extract_track_list',
-    'get_tracklist_stats',
-    'find_common_tracks',
-    'analyze_tracklist_progression',
-    'export_as_playlist'
-]

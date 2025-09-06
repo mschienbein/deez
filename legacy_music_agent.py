@@ -10,7 +10,7 @@ from pathlib import Path
 src_path = Path(__file__).parent / "src"
 sys.path.insert(0, str(src_path))
 
-from music_agent.agent.core import MusicAgent
+from music_agent.agent import MusicAgent, AgentConfig, ToolsProfile
 from music_agent.utils.config import config
 from music_agent.cli.interface import MusicAgentCLI
 
@@ -91,7 +91,12 @@ def main():
         if args.search or args.query:
             # Initialize agent for non-interactive modes
             logger.info("Initializing music agent...")
-            agent = MusicAgent()
+            agent_config = AgentConfig(
+                name="CLI-MusicAgent",
+                tools_profile=ToolsProfile.STANDARD,
+                enable_logging=True
+            )
+            agent = MusicAgent(agent_config)
             
             # Show agent status
             status = agent.get_agent_status()

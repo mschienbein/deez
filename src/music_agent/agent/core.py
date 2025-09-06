@@ -1,8 +1,21 @@
-"""Core agent implementation using AWS Strands with OpenAI primary and Bedrock fallback."""
+"""
+Legacy agent implementation - DEPRECATED
+
+This module provides backward compatibility for the original agent implementation.
+New code should use the refactored MusicAgent from music_agent.py.
+
+The refactored version provides:
+- Better modularity and maintainability
+- Advanced tool management with profiles
+- Multiple AI model support
+- Comprehensive configuration system
+- Enhanced error handling and logging
+"""
 
 import json
 import logging
 from typing import Any, Dict, List, Optional
+import warnings
 
 from strands import Agent
 from strands.models.openai import OpenAIModel
@@ -21,6 +34,13 @@ from ..database.schema import init_database
 from ..utils.config import config as app_config
 
 logger = logging.getLogger(__name__)
+
+# Deprecation warning
+warnings.warn(
+    "The core.MusicAgent is deprecated. Use music_agent.MusicAgent instead for better features and maintainability.",
+    DeprecationWarning,
+    stacklevel=2
+)
 
 
 class MusicAgent:
@@ -88,36 +108,61 @@ class MusicAgent:
             use_aws,
         ]
         
-        # Add custom music tools
+        # Add custom music tools using tool registry
         try:
-            from ..tools.music_tools import (
-                analyze_music_trends,
-                create_cross_platform_playlist,
-                export_playlist,
-                get_track_info,
-                search_music,
-                match_track_across_platforms,
-            )
-            from ..tools.download_tool import (
-                download_track,
-                search_and_download,
-            )
+            from ..tools.registry import get_all_tools
             
-            tools.extend([
-                search_music,
-                get_track_info,
-                create_cross_platform_playlist,
-                analyze_music_trends,
-                export_playlist,
-                match_track_across_platforms,
-                download_track,
-                search_and_download,
-            ])
+            custom_tools = get_all_tools()
+            tools.extend(custom_tools)
             
-            logger.info(f"Added {8} custom music tools")
+            logger.info(f"Added {len(custom_tools)} custom music tools via registry")
             
         except ImportError as e:
-            logger.warning(f"Failed to import custom tools: {e}")
+            logger.warning(f"Failed to import tools via registry: {e}")
+            
+            # Fallback to direct import if registry fails
+            try:
+                from ..tools import get_all_tools as fallback_get_all_tools
+                
+                fallback_tools = fallback_get_all_tools()
+                tools.extend(fallback_tools)
+                
+                logger.info(f"Added {len(fallback_tools)} fallback tools")
+                
+            except ImportError as fallback_e:
+                logger.error(f"All tool import methods failed: {fallback_e}")
+                
+                # Last resort - try legacy tools
+                try:
+                    from ..tools.music_tools import (
+                        analyze_music_trends,
+                        create_cross_platform_playlist,
+                        export_playlist,
+                        get_track_info,
+                        search_music,
+                        match_track_across_platforms,
+                    )
+                    from ..tools.download_tool import (
+                        download_track,
+                        search_and_download,
+                    )
+                    
+                    legacy_tools = [
+                        search_music,
+                        get_track_info,
+                        create_cross_platform_playlist,
+                        analyze_music_trends,
+                        export_playlist,
+                        match_track_across_platforms,
+                        download_track,
+                        search_and_download,
+                    ]
+                    
+                    tools.extend(legacy_tools)
+                    logger.info(f"Added {len(legacy_tools)} legacy tools as last resort")
+                    
+                except ImportError as legacy_e:
+                    logger.error(f"Even legacy tools failed to import: {legacy_e}")
         
         return tools
     

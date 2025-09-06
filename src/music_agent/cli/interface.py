@@ -10,7 +10,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.prompt import Prompt, Confirm
 from rich.markdown import Markdown
 
-from ..agent.core import MusicAgent
+from ..agent import MusicAgent, ToolsProfile, AgentConfig, create_agent
 from ..utils.config import config
 from ..auth.deezer_auth import DeezerAuthHelper
 from ..auth.spotify_auth import SpotifyAuthHelper
@@ -38,7 +38,14 @@ class MusicAgentCLI:
             task = progress.add_task("Initializing music agent...", total=None)
             
             try:
-                self.agent = MusicAgent()
+                # Use the new agent architecture with a standard configuration
+                agent_config = AgentConfig(
+                    name="CLI-MusicAgent",
+                    tools_profile=ToolsProfile.FULL,
+                    enable_logging=True,
+                    log_level="INFO"
+                )
+                self.agent = MusicAgent(agent_config)
                 progress.update(task, description="✅ Music agent initialized successfully!")
                 time.sleep(1)  # Brief pause to show success
                 return True
@@ -239,9 +246,9 @@ You can also use natural language:
         
         with self.console.status("[bold green]Searching and preparing download...") as status:
             try:
-                from ..tools.download_tool import search_and_download
-                
-                result = search_and_download(query, platform="deezer")
+                # Use the core search and download functionality via the agent
+                download_prompt = f"Search for and download the track: {query}"
+                result = self.agent.chat(download_prompt)
                 
                 # Display result in a nice panel
                 if "✅" in result or "✓" in result:
@@ -259,7 +266,6 @@ You can also use natural language:
                     
             except Exception as e:
                 self.console.print(f"❌ Download failed: {e}", style="red")
-                logger.error(f"Download command error: {e}")
     
     def process_search_command(self, command: str):
         """Process search commands."""
