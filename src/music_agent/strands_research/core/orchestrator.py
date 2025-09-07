@@ -9,8 +9,12 @@ import uuid
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 
-from strands.agents import MultiAgentOrchestrator
-from strands.utils import Logger
+from strands.multiagent import Swarm
+from strands import Agent
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 from ..agents import (
     DataCollectorAgent,
@@ -26,7 +30,7 @@ logger = Logger()
 
 class MusicResearchOrchestrator:
     """
-    Orchestrates multiple agents using AWS Strands MultiAgentOrchestrator.
+    Orchestrates multiple agents using AWS Strands Swarm.
     
     This demonstrates the proper way to implement multi-agent systems
     with Strands, using the framework's built-in orchestration capabilities
@@ -52,20 +56,14 @@ class MusicResearchOrchestrator:
             platforms = ["spotify", "beatport", "discogs", "musicbrainz", "deezer"]
         self.platforms = platforms
         
-        # Create the Strands MultiAgentOrchestrator
-        self.orchestrator = MultiAgentOrchestrator(
-            config={
-                "LOG_LEVEL": self.config.get("log_level", "INFO"),
-                "MAX_RETRIES": self.config.get("max_retries", 3),
-                "TIMEOUT": self.config.get("timeout", 60)
-            }
-        )
-        
         # Create and register specialized agents
         self._setup_agents()
         
-        # Configure the orchestrator's routing and coordination
-        self._configure_orchestrator()
+        # Create the Strands Swarm with our agents
+        self.swarm = Swarm(
+            agents=list(self.all_agents.values()),
+            max_workers=self.config.get("max_workers", 5)
+        )
     
     def _setup_agents(self):
         """Create and register all specialized agents."""
