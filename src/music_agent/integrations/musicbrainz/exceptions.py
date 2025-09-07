@@ -1,29 +1,19 @@
 """
-Beatport API exceptions.
+MusicBrainz API exceptions.
 """
 
 
-class BeatportError(Exception):
-    """Base exception for Beatport API errors."""
+class MusicBrainzError(Exception):
+    """Base exception for MusicBrainz API errors."""
     pass
 
 
-class AuthenticationError(BeatportError):
+class AuthenticationError(MusicBrainzError):
     """Authentication failed."""
     pass
 
 
-class TokenExpiredError(AuthenticationError):
-    """Access token has expired."""
-    pass
-
-
-class InvalidCredentialsError(AuthenticationError):
-    """Invalid username or password."""
-    pass
-
-
-class APIError(BeatportError):
+class APIError(MusicBrainzError):
     """API request failed."""
     
     def __init__(self, message: str, status_code: int = None):
@@ -31,7 +21,7 @@ class APIError(BeatportError):
         self.status_code = status_code
 
 
-class RateLimitError(BeatportError):
+class RateLimitError(MusicBrainzError):
     """Rate limit exceeded."""
     
     def __init__(self, message: str, retry_after: int = None):
@@ -39,11 +29,16 @@ class RateLimitError(BeatportError):
         self.retry_after = retry_after
 
 
-class NotFoundError(BeatportError):
+class NotFoundError(MusicBrainzError):
     """Resource not found."""
     pass
 
 
-class NetworkError(BeatportError):
+class NetworkError(MusicBrainzError):
     """Network connection error."""
+    pass
+
+
+class InvalidQueryError(MusicBrainzError):
+    """Invalid search query."""
     pass

@@ -1,30 +1,33 @@
 """
-Beatport configuration management.
+Configuration for Beatport API integration.
 """
 
 import os
 import json
 from typing import Optional, Dict, Any
+from dataclasses import dataclass
 from pathlib import Path
-from dataclasses import dataclass, field
 
 
 @dataclass
 class BeatportConfig:
-    """Configuration for Beatport integration."""
+    """Beatport API configuration."""
     
     # Authentication
     username: Optional[str] = None
     password: Optional[str] = None
-    client_id: Optional[str] = None
     access_token: Optional[str] = None
     refresh_token: Optional[str] = None
-    token_expires_at: Optional[int] = None
     
     # API settings
-    base_url: str = "https://api.beatport.com/v4"
-    auth_url: str = "https://api.beatport.com/v4/auth"
+    base_url: str = "https://api.beatport.com"
+    api_version: str = "v4"
     docs_url: str = "https://api.beatport.com/v4/docs/"
+    client_id: Optional[str] = None  # Will be scraped from docs if not provided
+    
+    # Token management
+    token_file: Optional[str] = None
+    auto_refresh: bool = True
     
     # Request settings
     timeout: int = 30
@@ -32,86 +35,64 @@ class BeatportConfig:
     retry_delay: float = 1.0
     rate_limit_delay: float = 0.5  # Delay between requests
     
-    # Storage
-    token_file: Optional[str] = None
-    auto_refresh_token: bool = True
+    # Search defaults
+    default_per_page: int = 25
+    max_per_page: int = 150
     
-    # Features
-    enable_caching: bool = True
+    # Cache settings
+    enable_cache: bool = True
     cache_ttl: int = 3600  # 1 hour
-    
-    # Debug
-    debug: bool = False
     
     @classmethod
     def from_env(cls) -> "BeatportConfig":
-        """Create config from environment variables."""
+        """Create configuration from environment variables."""
+        token_file = os.getenv("BEATPORT_TOKEN_FILE")
+        if not token_file:
+            token_file = str(Path.home() / ".beatport_token.json")
+            
         return cls(
             username=os.getenv("BEATPORT_USERNAME"),
             password=os.getenv("BEATPORT_PASSWORD"),
+            access_token=os.getenv("BEATPORT_ACCESS_TOKEN"),
+            refresh_token=os.getenv("BEATPORT_REFRESH_TOKEN"),
             client_id=os.getenv("BEATPORT_CLIENT_ID"),
-            token_file=os.getenv("BEATPORT_TOKEN_FILE", "~/.beatport_token.json"),
-            debug=os.getenv("BEATPORT_DEBUG", "false").lower() == "true",
+            token_file=token_file,
+            timeout=int(os.getenv("BEATPORT_TIMEOUT", "30")),
+            rate_limit_delay=float(os.getenv("BEATPORT_RATE_LIMIT", "0.5")),
         )
     
-    @classmethod
-    def from_file(cls, file_path: str) -> "BeatportConfig":
-        """Load config from JSON file."""
-        path = Path(file_path).expanduser()
-        if not path.exists():
-            raise FileNotFoundError(f"Config file not found: {file_path}")
-        
-        with open(path) as f:
-            data = json.load(f)
-        
-        return cls(**data)
+    def validate(self) -> None:
+        """Validate configuration."""
+        if not self.access_token and not (self.username and self.password):
+            raise ValueError(
+                "Beatport authentication required. "
+                "Set either BEATPORT_ACCESS_TOKEN or both "
+                "BEATPORT_USERNAME and BEATPORT_PASSWORD"
+            )
     
-    def save_token(self, token_data: Dict[str, Any]):
-        """Save token data to file."""
-        if not self.token_file:
-            return
+    def save_token(self, token_data: Dict[str, Any]) -> None:
+        """
+        Save token data to file.
         
-        path = Path(self.token_file).expanduser()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Update config with new token data
-        self.access_token = token_data.get("access_token")
-        self.refresh_token = token_data.get("refresh_token")
-        self.token_expires_at = token_data.get("expires_at")
-        
-        # Save to file
-        with open(path, "w") as f:
-            json.dump(token_data, f, indent=2)
+        Args:
+            token_data: Token data to save
+        """
+        if self.token_file:
+            Path(self.token_file).parent.mkdir(parents=True, exist_ok=True)
+            with open(self.token_file, 'w') as f:
+                json.dump(token_data, f, indent=2)
     
     def load_token(self) -> Optional[Dict[str, Any]]:
-        """Load token data from file."""
-        if not self.token_file:
-            return None
+        """
+        Load token data from file.
         
-        path = Path(self.token_file).expanduser()
-        if not path.exists():
-            return None
-        
-        try:
-            with open(path) as f:
-                token_data = json.load(f)
-            
-            # Update config with loaded token
-            self.access_token = token_data.get("access_token")
-            self.refresh_token = token_data.get("refresh_token")
-            self.token_expires_at = token_data.get("expires_at")
-            
-            return token_data
-        except (json.JSONDecodeError, IOError):
-            return None
-    
-    def clear_token(self):
-        """Clear stored token."""
-        self.access_token = None
-        self.refresh_token = None
-        self.token_expires_at = None
-        
-        if self.token_file:
-            path = Path(self.token_file).expanduser()
-            if path.exists():
-                path.unlink()
+        Returns:
+            Token data or None if not found
+        """
+        if self.token_file and Path(self.token_file).exists():
+            try:
+                with open(self.token_file, 'r') as f:
+                    return json.load(f)
+            except (json.JSONDecodeError, IOError):
+                return None
+        return None

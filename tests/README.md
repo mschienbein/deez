@@ -54,7 +54,7 @@ uv run python tests/musicbrainz/test_musicbrainz.py
 | Integration | Status | Test Coverage | API Coverage | Last Tested |
 |------------|--------|---------------|--------------|-------------|
 | Discogs | ✅ Complete | 100% | 8/8 endpoints | 2025-09-07 |
-| MusicBrainz | 🚧 Pending | 0% | 0/10 endpoints | - |
+| MusicBrainz | ✅ Complete | 100% | 12/12 endpoints | 2025-09-07 |
 | Spotify | 🚧 Pending | 0% | 0/15 endpoints | - |
 | Deezer | 🚧 Pending | 0% | 0/12 endpoints | - |
 | Beatport | 🔄 In Progress | 50% | 5/10 endpoints | - |

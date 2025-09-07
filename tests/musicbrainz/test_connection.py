@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Quick test to verify Discogs API connection with credentials.
+Quick test to verify MusicBrainz API connection.
 """
 
 import os
@@ -23,31 +23,31 @@ if env_path.exists():
                 if key not in os.environ:
                     os.environ[key] = value
 
-# Import Discogs client
-from src.music_agent.integrations.discogs import DiscogsClient, DiscogsConfig
+# Import MusicBrainz client
+from src.music_agent.integrations.musicbrainz import MusicBrainzClient, MusicBrainzConfig
 
 def test_connection():
-    """Test basic connection to Discogs API."""
-    print("Testing Discogs API Connection")
+    """Test basic connection to MusicBrainz API."""
+    print("Testing MusicBrainz API Connection")
     print("=" * 50)
     
     # Check environment variables
-    token = os.getenv("DISCOGS_USER_TOKEN")
-    key = os.getenv("DISCOGS_CONSUMER_KEY")
-    secret = os.getenv("DISCOGS_CONSUMER_SECRET")
-    agent = os.getenv("DISCOGS_USER_AGENT", "MusicAgent/1.0")
+    user_agent = os.getenv("MUSICBRAINZ_USER_AGENT", "DeezMusicAgent/1.0")
+    contact_email = os.getenv("MUSICBRAINZ_CONTACT_EMAIL")
+    username = os.getenv("MUSICBRAINZ_USERNAME")
+    password = os.getenv("MUSICBRAINZ_PASSWORD")
     
-    print(f"User Token: {'✓' if token else '✗'} {'(found)' if token else '(missing)'}")
-    print(f"Consumer Key: {'✓' if key else '✗'} {'(found)' if key else '(missing)'}")
-    print(f"Consumer Secret: {'✓' if secret else '✗'} {'(found)' if secret else '(missing)'}")
-    print(f"User Agent: {agent}")
+    print(f"User Agent: {user_agent}")
+    print(f"Contact Email: {'✓' if contact_email else '✗'} {'(set)' if contact_email else '(not set - recommended)'}")
+    print(f"Username: {'✓' if username else '✗'} {'(set)' if username else '(not set - optional)'}")
+    print(f"Password: {'✓' if password else '✗'} {'(set)' if password else '(not set - optional)'}")
     print()
     
     # Initialize client
     print("Initializing client...")
     try:
-        config = DiscogsConfig.from_env()
-        client = DiscogsClient(config)
+        config = MusicBrainzConfig.from_env()
+        client = MusicBrainzClient(config)
         print("✓ Client initialized successfully")
     except Exception as e:
         print(f"✗ Failed to initialize client: {e}")
@@ -56,16 +56,17 @@ def test_connection():
     print()
     
     # Test a simple search
-    print("Testing API connection with search...")
+    print("Testing API connection with artist search...")
     try:
-        results = client.search_releases(
+        results = client.search_artists(
             query="Daft Punk",
-            per_page=1
+            limit=1
         )
         
-        if results:
+        if results.results:
             print(f"✓ API connection successful!")
-            print(f"  Found: {results[0].title} by {results[0].artist}")
+            print(f"  Found: {results.results[0].name} (Score: {results.results[0].score})")
+            print(f"  MBID: {results.results[0].id}")
         else:
             print("✓ API connection successful (no results)")
         return True

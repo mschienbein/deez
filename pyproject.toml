@@ -58,6 +58,7 @@ dependencies = [
     "pathlib",
     "typing-extensions>=4.15.0",
     "python3-discogs-client>=2.8",
+    "musicbrainzngs>=0.7.1",
     "playwright>=1.55.0",
 ]
 

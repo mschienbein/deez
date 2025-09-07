@@ -69,6 +69,42 @@ def run_discogs_tests() -> Tuple[bool, str]:
         return False, str(e)
 
 
+def run_musicbrainz_tests() -> Tuple[bool, str]:
+    """Run MusicBrainz integration tests."""
+    try:
+        from tests.musicbrainz.test_connection import test_connection
+        
+        # Run connection test
+        success = test_connection()
+        
+        if success:
+            return True, "All endpoints tested successfully"
+        else:
+            return False, "Some tests failed"
+    except ImportError:
+        return False, "Test module not found"
+    except Exception as e:
+        return False, str(e)
+
+
+def run_beatport_tests() -> Tuple[bool, str]:
+    """Run Beatport integration tests."""
+    try:
+        from tests.beatport.test_connection import test_connection
+        
+        # Run connection test
+        success = test_connection()
+        
+        if success:
+            return True, "All endpoints tested successfully"
+        else:
+            return False, "Some tests failed"
+    except ImportError:
+        return False, "Test module not found"
+    except Exception as e:
+        return False, str(e)
+
+
 def run_integration_tests(integrations: List[str]) -> Dict[str, Tuple[bool, str]]:
     """Run tests for specified integrations."""
     results = {}
@@ -76,11 +112,11 @@ def run_integration_tests(integrations: List[str]) -> Dict[str, Tuple[bool, str]
     # Map of integration names to test functions
     test_map = {
         'discogs': run_discogs_tests,
+        'musicbrainz': run_musicbrainz_tests,
+        'beatport': run_beatport_tests,
         # Add more as they're implemented:
-        # 'musicbrainz': run_musicbrainz_tests,
         # 'spotify': run_spotify_tests,
         # 'deezer': run_deezer_tests,
-        # 'beatport': run_beatport_tests,
         # 'soundcloud': run_soundcloud_tests,
         # 'bandcamp': run_bandcamp_tests,
         # 'mixcloud': run_mixcloud_tests,
@@ -135,7 +171,7 @@ def main():
         'soulseek'
     ]
     
-    integrations = args.integrations if args.integrations else ['discogs']  # Only test what's ready
+    integrations = args.integrations if args.integrations else ['discogs', 'musicbrainz', 'beatport']  # Test what's ready
     
     # Print header
     print_header("MUSIC AGENT INTEGRATION TESTS")
@@ -143,10 +179,17 @@ def main():
     print(f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     # Load environment variables
-    from dotenv import load_dotenv
     env_path = project_root / '.env'
     if env_path.exists():
-        load_dotenv(env_path)
+        # Manual env loading to avoid dotenv dependency
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    value = value.strip('"').strip("'")
+                    if key not in os.environ:
+                        os.environ[key] = value
         print(f"✓ Loaded environment from {env_path}")
     else:
         print(f"⚠️  No .env file found at {env_path}")

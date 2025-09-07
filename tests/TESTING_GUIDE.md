@@ -20,9 +20,17 @@ uv run python tests/run_tests.py discogs spotify deezer
 uv run python tests/discogs/test_connection.py
 uv run python tests/discogs/test_discogs_api.py
 
+# MusicBrainz tests
+uv run python tests/musicbrainz/test_connection.py
+uv run python tests/musicbrainz/test_musicbrainz_api.py
+
+# Beatport tests
+uv run python tests/beatport/test_connection.py
+uv run python tests/beatport/test_beatport_api.py
+
 # Other integrations (when ready)
 uv run python tests/spotify/test_spotify.py
-uv run python tests/musicbrainz/test_musicbrainz.py
+uv run python tests/deezer/test_deezer.py
 ```
 
 ## Test Organization
@@ -34,16 +42,23 @@ tests/
 ├── run_tests.py           # Master test runner
 ├── test_report.md         # Latest test results
 │
-├── discogs/               # ✅ Complete
+├── discogs/               # ✅ Complete (100% - 8/8 tests)
 │   ├── test_connection.py
 │   ├── test_discogs_api.py
-│   ├── test_discogs.py
 │   └── test_results.md
 │
-├── musicbrainz/           # 🚧 Pending
+├── musicbrainz/           # ✅ Complete (100% - 12/12 tests)
+│   ├── test_connection.py
+│   ├── test_musicbrainz_api.py
+│   └── test_results.md
+│
+├── beatport/              # ✅ Complete (100% - 10/10 tests)
+│   ├── test_connection.py
+│   ├── test_beatport_api.py
+│   └── test_results.md
+│
 ├── spotify/               # 🚧 Pending
 ├── deezer/                # 🚧 Pending
-├── beatport/              # 🚧 Pending
 ├── soundcloud/            # ✅ Complete
 ├── bandcamp/              # ✅ Complete
 ├── mixcloud/              # ✅ Complete
@@ -166,6 +181,12 @@ vim .env
 - `DEEZER_APP_ID`: Application ID
 - `DEEZER_SECRET_KEY`: Secret key
 - OAuth for user data access
+
+#### Beatport
+- `BEATPORT_ACCESS_TOKEN`: OAuth access token
+- `BEATPORT_REFRESH_TOKEN`: OAuth refresh token
+- Or: `BEATPORT_USERNAME` and `BEATPORT_PASSWORD` for login
+- Rate limit: Configurable (default 0.5s between requests)
 
 ## Debugging Tests
 
