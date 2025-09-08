@@ -7,19 +7,28 @@ This directory contains comprehensive test suites and results for all music serv
 ```
 tests/
 ├── README.md                 # This file
-├── discogs/                  # Discogs API tests
+├── test_report.md            # Automated test results
+├── run_tests.py              # Master test runner
+├── discogs/                  # Discogs API tests ✅
 │   ├── test_connection.py    # Basic connection test
-│   ├── test_discogs_api.py   # Comprehensive API test
-│   ├── test_discogs.py       # Original test suite
-│   └── test_results.md       # Test results documentation
-├── musicbrainz/              # MusicBrainz tests (pending)
+│   └── test_discogs_api.py   # Comprehensive API test
+├── musicbrainz/              # MusicBrainz tests ✅
+│   ├── test_connection.py    # Basic connection test
+│   └── test_musicbrainz_api.py # Comprehensive API test
+├── beatport/                 # Beatport tests ✅
+│   ├── test_connection.py    # Basic connection test
+│   └── test_beatport_api.py  # Comprehensive API test
+├── mixcloud/                 # Mixcloud tests ✅
+│   ├── test_connection.py    # Basic connection test
+│   └── test_mixcloud_api.py  # Comprehensive API test
+├── deezer/                   # Deezer tests ✅
+│   ├── test_connection.py    # Basic connection test
+│   └── test_deezer_api.py    # Comprehensive API test with download
 ├── spotify/                  # Spotify tests (pending)
-├── deezer/                   # Deezer tests (pending)
-├── beatport/                 # Beatport tests (pending)
-├── soundcloud/               # SoundCloud tests (existing)
-├── bandcamp/                 # Bandcamp tests (existing)
-├── mixcloud/                 # Mixcloud tests (existing)
-└── youtube/                  # YouTube tests (pending)
+├── soundcloud/               # SoundCloud tests (pending)
+├── bandcamp/                 # Bandcamp tests (pending)
+├── youtube/                  # YouTube tests (pending)
+└── soulseek/                 # Soulseek tests (pending)
 ```
 
 ## Running Tests
@@ -31,22 +40,32 @@ tests/
 
 ### Run All Tests
 ```bash
-# Run all integration tests
-uv run pytest tests/
+# Run all integration tests with the master test runner
+uv run python tests/run_tests.py
 
 # Run specific integration tests
-uv run pytest tests/discogs/
+uv run python tests/discogs/test_discogs_api.py
+uv run python tests/musicbrainz/test_musicbrainz_api.py
+uv run python tests/beatport/test_beatport_api.py
+uv run python tests/mixcloud/test_mixcloud_api.py
+uv run python tests/deezer/test_deezer_api.py
 ```
 
 ### Run Individual Test Suites
 ```bash
-# Discogs
+# Connection tests (quick validation)
 uv run python tests/discogs/test_connection.py
-uv run python tests/discogs/test_discogs_api.py
+uv run python tests/musicbrainz/test_connection.py
+uv run python tests/beatport/test_connection.py
+uv run python tests/mixcloud/test_connection.py
+uv run python tests/deezer/test_connection.py
 
-# Other integrations (when available)
-uv run python tests/spotify/test_spotify.py
-uv run python tests/musicbrainz/test_musicbrainz.py
+# Comprehensive API tests
+uv run python tests/discogs/test_discogs_api.py
+uv run python tests/musicbrainz/test_musicbrainz_api.py
+uv run python tests/beatport/test_beatport_api.py
+uv run python tests/mixcloud/test_mixcloud_api.py
+uv run python tests/deezer/test_deezer_api.py
 ```
 
 ## Test Coverage Status
@@ -55,14 +74,21 @@ uv run python tests/musicbrainz/test_musicbrainz.py
 |------------|--------|---------------|--------------|-------------|
 | Discogs | ✅ Complete | 100% | 8/8 endpoints | 2025-09-07 |
 | MusicBrainz | ✅ Complete | 100% | 12/12 endpoints | 2025-09-07 |
+| Beatport | ✅ Complete | 100% | 10/10 endpoints | 2025-09-07 |
+| Mixcloud | ✅ Complete | 100% | 7/7 endpoints | 2025-09-07 |
+| Deezer | ✅ Complete | 100% | 13/13 endpoints | 2025-09-08 |
 | Spotify | 🚧 Pending | 0% | 0/15 endpoints | - |
-| Deezer | 🚧 Pending | 0% | 0/12 endpoints | - |
-| Beatport | 🔄 In Progress | 50% | 5/10 endpoints | - |
-| SoundCloud | ✅ Complete | 100% | 10/10 endpoints | - |
-| Bandcamp | ✅ Complete | 100% | 8/8 endpoints | - |
-| Mixcloud | ✅ Complete | 100% | 7/7 endpoints | - |
+| SoundCloud | 🚧 Pending | 0% | 0/10 endpoints | - |
+| Bandcamp | 🚧 Pending | 0% | 0/8 endpoints | - |
 | YouTube | 🚧 Pending | 0% | 0/5 endpoints | - |
 | Soulseek | 🚧 Pending | 0% | 0/8 endpoints | - |
+
+### Latest Test Results (from test_report.md)
+- **Total Integrations Tested:** 5
+- **All Passing:** ✅ 100% success rate
+- **Test Duration:** ~3 seconds total
+- **Endpoints Tested:** 50+ API endpoints
+- **Download Support:** Deezer (with encryption/decryption)
 
 ## Environment Setup
 
@@ -160,4 +186,4 @@ For test-related issues:
 
 ---
 
-*Last Updated: September 7, 2025*
+*Last Updated: September 8, 2025*
