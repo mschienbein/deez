@@ -29,8 +29,10 @@ class UserAPI(BaseAPI):
         self.ensure_connected()
         
         try:
-            info_data = self.client.users.get_info(username)
-            return UserInfo.from_api(info_data)
+            # The correct method is 'info' not 'get_info'
+            info_data = self.client.users.info(username)
+            # Pass username since API doesn't return it
+            return UserInfo.from_api(info_data, username=username)
         except Exception as e:
             logger.error(f"Failed to get user info for {username}: {e}")
             raise UserNotFoundError(f"User {username} not found or error: {e}")
@@ -57,8 +59,8 @@ class UserAPI(BaseAPI):
             start_time = asyncio.get_event_loop().time()
             
             while (asyncio.get_event_loop().time() - start_time) < timeout:
-                # Get browse status
-                status = self.client.users.get_browse_status(username)
+                # Get browse status - the correct method is 'browsing_status'
+                status = self.client.users.browsing_status(username)
                 
                 if status and status.get("status") == "completed":
                     # Browse completed, return result
@@ -67,7 +69,7 @@ class UserAPI(BaseAPI):
                 await asyncio.sleep(1)
             
             # Timeout - return partial results if available
-            status = self.client.users.get_browse_status(username)
+            status = self.client.users.browsing_status(username)
             if status:
                 logger.warning(f"Browse timed out for {username}, returning partial results")
                 return BrowseResult.from_api(username, status)

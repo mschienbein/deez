@@ -179,11 +179,10 @@ class TransferAPI(BaseAPI):
         self.ensure_connected()
         
         try:
-            downloads = self.client.transfers.get_downloads()
-            
-            for download_data in downloads:
-                if download_data.get("id") == download_id:
-                    return Transfer.from_api(download_data)
+            # Try to get specific download
+            download_data = self.client.transfers.get_download(download_id)
+            if download_data:
+                return Transfer.from_api(download_data)
             
             return None
             
@@ -201,7 +200,8 @@ class TransferAPI(BaseAPI):
         self.ensure_connected()
         
         try:
-            downloads = self.client.transfers.get_downloads()
+            # get_all_downloads() doesn't require username
+            downloads = self.client.transfers.get_all_downloads()
             return [Transfer.from_api(d) for d in downloads]
         except Exception as e:
             logger.error(f"Failed to get downloads: {e}")
@@ -217,7 +217,8 @@ class TransferAPI(BaseAPI):
         self.ensure_connected()
         
         try:
-            uploads = self.client.transfers.get_uploads()
+            # get_all_uploads() doesn't require username
+            uploads = self.client.transfers.get_all_uploads()
             return [Transfer.from_api(u) for u in uploads]
         except Exception as e:
             logger.error(f"Failed to get uploads: {e}")
@@ -247,6 +248,9 @@ class TransferAPI(BaseAPI):
         """
         Retry a failed download.
         
+        Note: slskd doesn't have a direct retry method,
+        so we'll need to re-enqueue the download.
+        
         Args:
             download_id: Download ID to retry
             
@@ -256,8 +260,27 @@ class TransferAPI(BaseAPI):
         self.ensure_connected()
         
         try:
-            self.client.transfers.retry_download(download_id)
-            logger.info(f"Retrying download {download_id}")
+            # Get the download info first
+            download = self.client.transfers.get_download(download_id)
+            if not download:
+                logger.error(f"Download {download_id} not found")
+                return False
+            
+            # Cancel the failed download first
+            self.client.transfers.cancel_download(download_id)
+            
+            # Re-enqueue it
+            files = [{
+                "filename": download.get("filename"),
+                "size": download.get("size", 0)
+            }]
+            
+            result = self.client.transfers.enqueue(
+                username=download.get("username"),
+                files=files
+            )
+            
+            logger.info(f"Re-enqueued download for {download.get('filename')}")
             return True
         except Exception as e:
             logger.error(f"Failed to retry download {download_id}: {e}")

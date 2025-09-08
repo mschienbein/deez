@@ -31,7 +31,7 @@ from src.music_agent.integrations.soulseek import (
 )
 
 
-async def test_connection():
+async def test_connection_async():
     """Test basic connection to slskd server."""
     print("\n" + "=" * 50)
     print(" SOULSEEK/SLSKD CONNECTION TEST")
@@ -97,9 +97,14 @@ async def test_connection():
         await client.close()
 
 
+def test_connection():
+    """Test connection synchronously for test runner."""
+    return asyncio.run(test_connection_async())
+
+
 async def main():
     """Run connection test."""
-    success = await test_connection()
+    success = await test_connection_async()
     return 0 if success else 1
 
 

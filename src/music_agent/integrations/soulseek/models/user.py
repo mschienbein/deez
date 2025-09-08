@@ -25,14 +25,19 @@ class UserInfo:
     country_code: Optional[str] = None
     
     @classmethod
-    def from_api(cls, data: dict) -> "UserInfo":
-        """Create UserInfo from slskd API response."""
+    def from_api(cls, data: dict, username: str = None) -> "UserInfo":
+        """Create UserInfo from slskd API response.
+        
+        Args:
+            data: API response data
+            username: Username (since API doesn't return it)
+        """
         return cls(
-            username=data.get("username", ""),
+            username=username or data.get("username", ""),
             description=data.get("description"),
             upload_slots=data.get("uploadSlots", 0),
             queue_length=data.get("queueLength", 0),
-            has_free_slots=data.get("hasFreeSlots", False),
+            has_free_slots=data.get("hasFreeUploadSlot", False),
             is_online=data.get("isOnline", False),
             shared_file_count=data.get("sharedFileCount"),
             shared_directory_count=data.get("sharedDirectoryCount"),
