@@ -24,11 +24,13 @@ tests/
 ├── deezer/                   # Deezer tests ✅
 │   ├── test_connection.py    # Basic connection test
 │   └── test_deezer_api.py    # Comprehensive API test with download
+├── soulseek/                 # Soulseek tests ✅
+│   ├── test_connection.py    # Basic connection test
+│   └── test_soulseek_api.py  # Comprehensive API test with P2P
 ├── spotify/                  # Spotify tests (pending)
 ├── soundcloud/               # SoundCloud tests (pending)
 ├── bandcamp/                 # Bandcamp tests (pending)
-├── youtube/                  # YouTube tests (pending)
-└── soulseek/                 # Soulseek tests (pending)
+└── youtube/                  # YouTube tests (pending)
 ```
 
 ## Running Tests
@@ -49,6 +51,7 @@ uv run python tests/musicbrainz/test_musicbrainz_api.py
 uv run python tests/beatport/test_beatport_api.py
 uv run python tests/mixcloud/test_mixcloud_api.py
 uv run python tests/deezer/test_deezer_api.py
+uv run python tests/soulseek/test_soulseek_api.py
 ```
 
 ### Run Individual Test Suites
@@ -59,6 +62,7 @@ uv run python tests/musicbrainz/test_connection.py
 uv run python tests/beatport/test_connection.py
 uv run python tests/mixcloud/test_connection.py
 uv run python tests/deezer/test_connection.py
+uv run python tests/soulseek/test_connection.py
 
 # Comprehensive API tests
 uv run python tests/discogs/test_discogs_api.py
@@ -66,6 +70,7 @@ uv run python tests/musicbrainz/test_musicbrainz_api.py
 uv run python tests/beatport/test_beatport_api.py
 uv run python tests/mixcloud/test_mixcloud_api.py
 uv run python tests/deezer/test_deezer_api.py
+uv run python tests/soulseek/test_soulseek_api.py
 ```
 
 ## Test Coverage Status
@@ -77,18 +82,18 @@ uv run python tests/deezer/test_deezer_api.py
 | Beatport | ✅ Complete | 100% | 10/10 endpoints | 2025-09-07 |
 | Mixcloud | ✅ Complete | 100% | 7/7 endpoints | 2025-09-07 |
 | Deezer | ✅ Complete | 100% | 13/13 endpoints | 2025-09-08 |
+| Soulseek | ✅ Complete | 100% | 7/7 endpoints | 2025-09-08 |
 | Spotify | 🚧 Pending | 0% | 0/15 endpoints | - |
 | SoundCloud | 🚧 Pending | 0% | 0/10 endpoints | - |
 | Bandcamp | 🚧 Pending | 0% | 0/8 endpoints | - |
 | YouTube | 🚧 Pending | 0% | 0/5 endpoints | - |
-| Soulseek | 🚧 Pending | 0% | 0/8 endpoints | - |
 
 ### Latest Test Results (from test_report.md)
-- **Total Integrations Tested:** 5
+- **Total Integrations Tested:** 6
 - **All Passing:** ✅ 100% success rate
-- **Test Duration:** ~3 seconds total
-- **Endpoints Tested:** 50+ API endpoints
-- **Download Support:** Deezer (with encryption/decryption)
+- **Test Duration:** ~8.5 seconds total
+- **Endpoints Tested:** 57+ API endpoints
+- **Download Support:** Deezer (encryption/decryption), Soulseek (P2P)
 
 ## Environment Setup
 
@@ -118,6 +123,12 @@ YOUTUBE_API_KEY=your_api_key
 # Beatport
 BEATPORT_USERNAME=your_username
 BEATPORT_PASSWORD=your_password
+
+# Soulseek/slskd
+SLSKD_HOST=http://localhost:5030
+SLSKD_API_KEY=your_slskd_api_key
+SLSKD_USERNAME=your_soulseek_username
+SLSKD_PASSWORD=your_soulseek_password
 
 # Add other service credentials as needed
 ```
