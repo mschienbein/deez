@@ -1,17 +1,39 @@
 # Music Agent Testing Guide
 
+## Current Status
+
+### ✅ Working Integrations (6 Total)
+All these integrations have been fully refactored to modular architecture and are passing 100% of tests:
+
+1. **Discogs** - 8/8 endpoints tested
+2. **MusicBrainz** - 12/12 endpoints tested  
+3. **Beatport** - 10/10 endpoints tested
+4. **Mixcloud** - 7/7 endpoints tested
+5. **Deezer** - 13/13 endpoints tested (includes download with encryption)
+6. **Soulseek** - 7/7 endpoints tested (P2P via slskd server)
+
+### 🚧 Pending Integrations (4 Total)
+These still need refactoring to the modular pattern:
+- Spotify
+- YouTube
+- SoundCloud
+- Bandcamp
+
 ## Quick Start
 
 ### Run All Tests
 ```bash
-# Run test suite for all ready integrations
+# Run test suite for all 6 ready integrations
 uv run python tests/run_tests.py
 
 # Run specific integration test
 uv run python tests/run_tests.py discogs
 
 # Run multiple integration tests
-uv run python tests/run_tests.py discogs spotify deezer
+uv run python tests/run_tests.py discogs musicbrainz beatport
+
+# Run all 6 working integrations
+uv run python tests/run_tests.py discogs musicbrainz beatport mixcloud deezer soulseek
 ```
 
 ### Individual Test Files
@@ -28,9 +50,17 @@ uv run python tests/musicbrainz/test_musicbrainz_api.py
 uv run python tests/beatport/test_connection.py
 uv run python tests/beatport/test_beatport_api.py
 
-# Other integrations (when ready)
-uv run python tests/spotify/test_spotify.py
-uv run python tests/deezer/test_deezer.py
+# Mixcloud tests
+uv run python tests/mixcloud/test_connection.py
+uv run python tests/mixcloud/test_mixcloud_api.py
+
+# Deezer tests
+uv run python tests/deezer/test_connection.py
+uv run python tests/deezer/test_deezer_api.py
+
+# Soulseek tests
+uv run python tests/soulseek/test_connection.py
+uv run python tests/soulseek/test_soulseek_api.py
 ```
 
 ## Test Organization
@@ -57,13 +87,25 @@ tests/
 │   ├── test_beatport_api.py
 │   └── test_results.md
 │
+├── mixcloud/              # ✅ Complete (100% - 7/7 tests)
+│   ├── test_connection.py
+│   ├── test_mixcloud_api.py
+│   └── test_results.md
+│
+├── deezer/                # ✅ Complete (100% - 13/13 tests)
+│   ├── test_connection.py
+│   ├── test_deezer_api.py
+│   └── test_results.md
+│
+├── soulseek/              # ✅ Complete (100% - 7/7 tests)
+│   ├── test_connection.py
+│   ├── test_soulseek_api.py
+│   └── test_results.md
+│
 ├── spotify/               # 🚧 Pending
-├── deezer/                # 🚧 Pending
-├── soundcloud/            # ✅ Complete
-├── bandcamp/              # ✅ Complete
-├── mixcloud/              # ✅ Complete
-├── youtube/               # 🚧 Pending
-└── soulseek/              # 🚧 Pending
+├── soundcloud/            # 🚧 Pending
+├── bandcamp/              # 🚧 Pending
+└── youtube/               # 🚧 Pending
 ```
 
 ## Test Types
@@ -178,15 +220,28 @@ vim .env
 - No authentication required
 
 #### Deezer
-- `DEEZER_APP_ID`: Application ID
-- `DEEZER_SECRET_KEY`: Secret key
-- OAuth for user data access
+- `DEEZER_ARL`: ARL cookie from browser (required for downloads)
+- Authentication provides access to high quality downloads (FLAC)
+- Supports track metadata writing with mutagen
 
 #### Beatport
 - `BEATPORT_ACCESS_TOKEN`: OAuth access token
 - `BEATPORT_REFRESH_TOKEN`: OAuth refresh token
 - Or: `BEATPORT_USERNAME` and `BEATPORT_PASSWORD` for login
 - Rate limit: Configurable (default 0.5s between requests)
+
+#### Mixcloud
+- `MIXCLOUD_CLIENT_ID`: OAuth client ID
+- `MIXCLOUD_CLIENT_SECRET`: OAuth client secret
+- `MIXCLOUD_REDIRECT_URI`: OAuth redirect URI (default: http://localhost:8080/callback)
+- No rate limiting
+
+#### Soulseek/slskd
+- `SLSKD_HOST`: slskd server URL (default: http://localhost:5030)
+- `SLSKD_API_KEY`: API key for slskd server
+- `SLSKD_USERNAME`: Soulseek username
+- `SLSKD_PASSWORD`: Soulseek password
+- Requires slskd server running (Docker or standalone)
 
 ## Debugging Tests
 
@@ -286,4 +341,4 @@ For test-related issues:
 
 ---
 
-*Last Updated: September 7, 2025*
+*Last Updated: September 8, 2025*
