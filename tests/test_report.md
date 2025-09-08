@@ -1,17 +1,19 @@
 # Test Report
 
-**Date:** 2025-09-07 18:46:31
+**Date:** 2025-09-07 19:24:14
 
 ## Results
 
 | Integration | Status | Details |
 |------------|--------|----------|
-| discogs | ✅ PASS | All endpoints tested successfully (0.43s) |
-| musicbrainz | ✅ PASS | All endpoints tested successfully (0.51s) |
-| beatport | ✅ PASS | All endpoints tested successfully (0.57s) |
+| discogs | ✅ PASS | All endpoints tested successfully (0.46s) |
+| musicbrainz | ✅ PASS | All endpoints tested successfully (0.46s) |
+| beatport | ✅ PASS | All endpoints tested successfully (0.96s) |
+| mixcloud | ✅ PASS | All endpoints tested successfully (0.66s) |
+| deezer | ✅ PASS | All endpoints tested successfully (0.64s) |
 
 ## Summary
-- Total: 3
-- Passed: 3
+- Total: 5
+- Passed: 5
 - Failed: 0
 - Skipped: 0

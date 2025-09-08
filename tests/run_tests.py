@@ -105,6 +105,42 @@ def run_beatport_tests() -> Tuple[bool, str]:
         return False, str(e)
 
 
+def run_mixcloud_tests() -> Tuple[bool, str]:
+    """Run Mixcloud integration tests."""
+    try:
+        from tests.mixcloud.test_connection import test_connection
+        
+        # Run connection test
+        success = test_connection()
+        
+        if success:
+            return True, "All endpoints tested successfully"
+        else:
+            return False, "Some tests failed"
+    except ImportError:
+        return False, "Test module not found"
+    except Exception as e:
+        return False, str(e)
+
+
+def run_deezer_tests() -> Tuple[bool, str]:
+    """Run Deezer integration tests."""
+    try:
+        from tests.deezer.test_connection import test_connection
+        
+        # Run connection test
+        success = test_connection()
+        
+        if success:
+            return True, "All endpoints tested successfully"
+        else:
+            return False, "Some tests failed"
+    except ImportError:
+        return False, "Test module not found"
+    except Exception as e:
+        return False, str(e)
+
+
 def run_integration_tests(integrations: List[str]) -> Dict[str, Tuple[bool, str]]:
     """Run tests for specified integrations."""
     results = {}
@@ -114,12 +150,12 @@ def run_integration_tests(integrations: List[str]) -> Dict[str, Tuple[bool, str]
         'discogs': run_discogs_tests,
         'musicbrainz': run_musicbrainz_tests,
         'beatport': run_beatport_tests,
+        'mixcloud': run_mixcloud_tests,
+        'deezer': run_deezer_tests,
         # Add more as they're implemented:
         # 'spotify': run_spotify_tests,
-        # 'deezer': run_deezer_tests,
         # 'soundcloud': run_soundcloud_tests,
         # 'bandcamp': run_bandcamp_tests,
-        # 'mixcloud': run_mixcloud_tests,
         # 'youtube': run_youtube_tests,
         # 'soulseek': run_soulseek_tests,
     }
@@ -171,7 +207,7 @@ def main():
         'soulseek'
     ]
     
-    integrations = args.integrations if args.integrations else ['discogs', 'musicbrainz', 'beatport']  # Test what's ready
+    integrations = args.integrations if args.integrations else ['discogs', 'musicbrainz', 'beatport', 'mixcloud', 'deezer']  # Test what's ready
     
     # Print header
     print_header("MUSIC AGENT INTEGRATION TESTS")
